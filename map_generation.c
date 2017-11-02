@@ -10,7 +10,7 @@
 /* Variables */
 /* int size = 300;  The x and y size of the map */
 int border = 2; /* The size of the ocean border */
-int flooding = 2.5; /* How high the ocean rises */
+float flooding = 2.5; /* How high the ocean rises */
 int generations = 10; /* Number of times the changes will be repeated */
 int cleaning = 3; /* The number of cleaning up cycles run */
 
@@ -21,15 +21,20 @@ int sea = 0;
 int ground = 0;
 int avg_ground = 0;
 
-int i, int j, int k;
+int i, j, k;
 
 float z[size][size]; /* Making the matrix which will store the altitudes */
 
-srand(time(NULL)); /* Intiallizes the random shite */
 
-float random(); /* Generates random numbers between 0 and 1 */
+long random() /* Generates random numbers between 0 and 1 */
+{
+  return ((double)rand()/(double)(RAND_MAX));
+}
+
 
 int main () {
+    srand(time(NULL)); /* Intiallizes the random shite */
+
     /* This is assigning a random float between 1 and 0 to each cell */
     for(i = 0; i <= size; i++)
     {
@@ -91,7 +96,7 @@ int main () {
     /* Raising the ocean */
     for(i = 0; i <= size; i++){
       for(j = 0; j <= size; j++){
-        z[i][j] -= flooding
+        z[i][j] -= flooding;
       }
     }
 
@@ -164,9 +169,4 @@ int main () {
         }
       }
     }
-}
-
-float random()
-{
-  return ((double)rand()/(double)(RAND_MAX));
 }
