@@ -9,7 +9,7 @@
 
 /* Variables */
 /* int size = 300;  The x and y size of the map */
-int border = 2; /* The size of the ocean border */
+int edge = 2; /* The size of the ocean edge */
 float flooding = 2.5; /* How high the ocean rises */
 int generations = 10; /* Number of times the changes will be repeated */
 int cleaning = 3; /* The number of cleaning up cycles run */
