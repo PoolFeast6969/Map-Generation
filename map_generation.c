@@ -97,7 +97,7 @@ int main () {
     for(i = 0; i < size; i++){
       for(j = 0; j < size; j++){
         z[i][j] -= flooding;
-        
+
         if (z[i][j] < 0) {
           z[i][j] = 0;
         }
@@ -170,16 +170,16 @@ int main () {
              ground += 1;
              avg_ground += z[i+1][j];
            }
-          
+
           if (z[i][j] > 0 && sea > 4) {
-            z[i][j] = 0; 
+            z[i][j] = 0;
           } else if (z[i][j] == 0 && ground > 5) {
-            z[i][j] = avg_ground/ground 
+            z[i][j] = avg_ground/ground;
           }
         }
       }
     }
-  
+
     int row, columns;
     for (int row=0; row<size; row++)
     {
