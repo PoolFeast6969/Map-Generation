@@ -36,9 +36,9 @@ int main () {
     srand(time(NULL)); /* Intiallizes the random shite */
 
     /* This is assigning a random float between 1 and 0 to each cell */
-    for(i = 0; i <= size; i++)
+    for(i = 0; i < size; i++)
     {
-      for(j = 0; j <= size; j++)
+      for(j = 0; j < size; j++)
       {
         z[i][j] = random();
       }
@@ -94,8 +94,8 @@ int main () {
     }
 
     /* Raising the ocean */
-    for(i = 0; i <= size; i++){
-      for(j = 0; j <= size; j++){
+    for(i = 0; i < size; i++){
+      for(j = 0; j < size; j++){
         z[i][j] -= flooding;
       }
     }
@@ -169,4 +169,14 @@ int main () {
         }
       }
     }
+    int row, columns;
+    for (int row=0; row<size; row++)
+    {
+        for(int columns=0; columns<size; columns++)
+            {
+             printf("%d     ", z[row][columns]);
+            }
+        printf("\n");
+    }
+
 }
