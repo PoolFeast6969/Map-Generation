@@ -32,7 +32,7 @@ long random() /* Generates random numbers between 0 and 1 */
 }
 
 
-int main () {
+void smain () {
     srand(time(NULL)); /* Intiallizes the random shite */
 
     /* This is assigning a random float between 1 and 0 to each cell */
