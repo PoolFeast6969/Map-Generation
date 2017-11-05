@@ -5,16 +5,12 @@
 
 #include <SDL2/SDL.h>
 
-int main(int argc, char** argv){
+int render(double *height){
     const int size = 1000;
     
-    double height[size][size];
+    //double height[size][size];
     /* Seed the random number generator */
     srand(0);
-    
-    for (int i = 0; i < size; i++)
-        for (int j = 0; j < size; j++)
-            height[i][j] = rand();
     
     //Start SDL
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");

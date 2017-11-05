@@ -23,7 +23,7 @@ int avg_ground = 0;
 
 int i, j, k;
 
-float z[size][size]; /* Making the matrix which will store the altitudes */
+double z[size][size]; /* Making the matrix which will store the altitudes */
 
 
 long random() /* Generates random numbers between 0 and 1 */
@@ -32,7 +32,7 @@ long random() /* Generates random numbers between 0 and 1 */
 }
 
 
-void smain () {
+int main () {
     srand(time(NULL)); /* Intiallizes the random shite */
 
     /* This is assigning a random float between 1 and 0 to each cell */
@@ -40,7 +40,7 @@ void smain () {
     {
       for(j = 0; j < size; j++)
       {
-        z[i][j] = random();
+        z[i][j] = ((double) rand() / (RAND_MAX));
       }
     }
 
@@ -82,7 +82,7 @@ void smain () {
           /* This section is aducting the altitude bases on surronding cells */
           /* Note these adjustment values where found via trial and error */
           /* and work best for map size 100 to 300 */
-          if (lower > 4 && higher < 8) {
+          if (lower > 4 && lower < 8) {
             z[i][j] += 0.6;
           } else if (lower == 8) {
             z[i][j] += 1.1;
@@ -179,15 +179,13 @@ void smain () {
         }
       }
     }
-
-    int row, columns;
     for (int row=0; row<size; row++)
     {
         for(int columns=0; columns<size; columns++)
             {
-             printf("%d     ", z[row][columns]);
+             printf("%.1f     ", z[row][columns]);
             }
         printf("\n");
     }
-
+    render(*z);
 }
