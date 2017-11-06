@@ -112,9 +112,9 @@ int render(long double height[], int size){
         
         // Add the land to the frame
         SDL_RenderCopy(renderer,land_texture,&land_source,&land_dest);
-        
+        // Add the clouds to the frame
         SDL_RenderCopyEx(renderer, cloud_texture, &cloud_source, &cloud_dest, 90, NULL, SDL_FLIP_VERTICAL);
-        
+        // Show the completed frame and wait for vsync
         SDL_RenderPresent(renderer);
         
         // Move clouds really badly
