@@ -5,13 +5,13 @@
 #include <stdio.h>
 #include <time.h>
 
-#define size 600
+#define size 1000
 
 /* Variables */
 /* int size = 300;  The x and y size of the map */
-int edge = 2; /* The size of the ocean edge */
+int edge = 0; /* The size of the ocean edge */
 float flooding = 2.5; /* How high the ocean rises */
-int generations = 10; /* Number of times the changes will be repeated */
+int generations = 30; /* Number of times the changes will be repeated */
 int cleaning = 3; /* The number of cleaning up cycles run */
 
 int higher = 0;
@@ -26,12 +26,6 @@ int i, j, k;
 long double z[size][size]; // Making the matrix which will store the altitudes
 
 
-long random() // Generates random numbers between 0 and 1
-{
-  return ((double)rand()/(double)(RAND_MAX));
-}
-
-
 int main () {
     srand(time(NULL)); // Intiallizes the random shite
 
@@ -40,7 +34,7 @@ int main () {
     {
       for(j = 0; j < size; j++)
       {
-        z[i][j] = (double) rand() / RAND_MAX;
+        z[i][j] = (long double) rand() / RAND_MAX + 1;
       }
     }
 
