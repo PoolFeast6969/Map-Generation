@@ -101,10 +101,12 @@ int render(long double height[], int size){
     
     int window_h;
     int window_w;
+    SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
+    cloud_dest.x = -window_w*2;
     
-    cloud_dest.x = -200;
+    int supersampling = 1;
     
-    float cloud_speed = 0.01; // In pixels per millisecond
+    float cloud_speed = 0.02*supersampling; // In pixels per millisecond
     
     // Main loop that updates at vsync in case we ever need animations
     Uint32 last_update_time = SDL_GetTicks();
@@ -114,15 +116,15 @@ int render(long double height[], int size){
             break;
         }
         // Get the window size
-        SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
+        SDL_GetWindowSize(window, &window_w, &window_h);
+        SDL_RenderSetLogicalSize(renderer, window_w*supersampling, window_h*supersampling);
+        land_dest.w = window_w*3*supersampling;
+        land_dest.h = window_w*3*supersampling;
         
-        land_dest.w = window_w*3;
-        land_dest.h = window_w*3;
+        cloud_dest.w = window_w*3*supersampling;
+        cloud_dest.h = window_w*3*supersampling;
         
-        cloud_dest.w = window_w*3;
-        cloud_dest.h = window_w*3;
-        
-        land_source.w = window_w*3;
+        land_source.w = window_w*3*supersampling;
         
         Uint32 time_since_update = SDL_GetTicks() - last_update_time;
         if ((int)(time_since_update * cloud_speed) != 0) {
