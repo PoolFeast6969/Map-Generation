@@ -9,10 +9,10 @@
 
 /* Variables */
 /* int size = 300;  The x and y size of the map */
-int edge = 0; /* The size of the ocean edge */
+int edge = 2; /* The size of the ocean edge */
 float flooding = 2.5; /* How high the ocean rises */
 int generations = 30; /* Number of times the changes will be repeated */
-int cleaning = 3; /* The number of cleaning up cycles run */
+int cleaning = 5; /* The number of cleaning up cycles run */
 
 int higher = 0;
 int lower = 0;
@@ -41,9 +41,9 @@ int main () {
     // Running the map generator
     for(k = 1; k <= generations; k++)
     {
-      for(i = 1; i < size; i++)
+      for(i = edge; i < size - edge; i++)
       {
-        for(j = 1; j < size; j++)
+        for(j = edge; j < size -edge; j++)
         {
           // This section is checking the neighbors
           higher = 0;
