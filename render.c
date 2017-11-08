@@ -8,13 +8,12 @@
 int render(long double height[], int size){
     //Start SDL
     SDL_Init( SDL_INIT_VIDEO );
-    
     SDL_Window *window = SDL_CreateWindow(
         "get ",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
         1000, 1000,
-        SDL_WINDOW_RESIZABLE
+        SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL
     );
     SDL_Renderer *renderer = SDL_CreateRenderer(
         window,
@@ -23,9 +22,7 @@ int render(long double height[], int size){
         SDL_RENDERER_PRESENTVSYNC |
         SDL_RENDERER_TARGETTEXTURE
     );
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
-    //SDL_RenderSetLogicalSize(renderer, size, size);
-    //SDL_RenderSetScale(renderer, 4,4);
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
     
     SDL_Event event;
     int width;
@@ -41,7 +38,7 @@ int render(long double height[], int size){
     for(int columns=0; columns < size*size; columns++) {
         if (height[columns] == 0) {
             // Water
-            land_pixels[columns] = SDL_MapRGB(fmt, 40, 100, 200);
+            land_pixels[columns] = SDL_MapRGB(fmt, 50, 120, 200);
         }
         else if (height[columns] > 0) {
             if (height[columns] < 0) {
@@ -94,19 +91,24 @@ int render(long double height[], int size){
     SDL_RenderCopyEx(renderer, cloud_shadow_texture, &cloud_shadow_source, &cloud_shadow_dest, 90, NULL, SDL_FLIP_NONE);
     // Add the clouds to the frame
     SDL_RenderCopyEx(renderer, cloud_texture, &cloud_source, &cloud_dest, 90, NULL, SDL_FLIP_NONE);
-    
-    
     // Something
     SDL_SetRenderTarget(renderer, NULL);
     
     int window_h;
     int window_w;
     SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
+    
+    // Wow a plane
+    SDL_Surface *spitfire_surface = SDL_LoadBMP("spitfire.bmp");
+    SDL_SetColorKey(spitfire_surface, SDL_TRUE, SDL_MapRGB(spitfire_surface->format, 255, 255, 255));
+    SDL_ConvertSurface(spitfire_surface, fmt, 0);
+    SDL_Texture *spitfire = SDL_CreateTextureFromSurface(renderer, spitfire_surface);
+    SDL_Rect spitfire_dest = {0,0,0,0};
+    
+
     cloud_dest.x = -window_w*2;
     
-    int supersampling = 1;
-    
-    float cloud_speed = 0.02*supersampling; // In pixels per millisecond
+    float cloud_speed = 0.005; // In pixels per millisecond
     
     // Main loop that updates at vsync in case we ever need animations
     Uint32 last_update_time = SDL_GetTicks();
@@ -117,25 +119,32 @@ int render(long double height[], int size){
         }
         // Get the window size
         SDL_GetWindowSize(window, &window_w, &window_h);
-        SDL_RenderSetLogicalSize(renderer, window_w*supersampling, window_h*supersampling);
-        land_dest.w = window_w*3*supersampling;
-        land_dest.h = window_w*3*supersampling;
+        land_dest.w = window_w*3;
+        land_dest.h = window_w*3;
         
-        cloud_dest.w = window_w*3*supersampling;
-        cloud_dest.h = window_w*3*supersampling;
+        cloud_dest.w = window_w*3;
+        cloud_dest.h = window_w*3;
         
-        land_source.w = window_w*3*supersampling;
+        land_source.w = window_w*3;
+        
+        spitfire_dest.x = window_w/2-window_w/4/2;
+        spitfire_dest.y = 2*window_h/3;
+        
+        spitfire_dest.w =window_w/4;
+        spitfire_dest.h =window_w/4;
         
         Uint32 time_since_update = SDL_GetTicks() - last_update_time;
         if ((int)(time_since_update * cloud_speed) != 0) {
             cloud_dest.x = cloud_dest.x + (int)(time_since_update * cloud_speed);
             last_update_time = SDL_GetTicks();
         }
-        
+        SDL_RenderClear(renderer);
         // Add the land to the frame
         SDL_RenderCopy(renderer,land_texture,&land_source,&land_dest);
         // Add the clouds
         SDL_RenderCopy(renderer,cloud_complete_texture, &cloud_source, &cloud_dest);
+        // Add plane
+        SDL_RenderCopyEx(renderer, spitfire, NULL, &spitfire_dest, 0, NULL, SDL_FLIP_NONE);
         // Show the completed frame and wait for vsync
         SDL_RenderPresent(renderer);
         
