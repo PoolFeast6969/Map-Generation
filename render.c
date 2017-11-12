@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <SDL2/SDL.h>
+#include "SDL2/SDL.h"
 
 
 int render(long double height[], int size){
@@ -25,16 +25,16 @@ int render(long double height[], int size){
         SDL_RENDERER_TARGETTEXTURE
     );
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-    
+
     SDL_Event event;
     int width;
-    
+
     Uint32 format;
     SDL_PixelFormat *fmt;
     SDL_Texture *land_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB332, SDL_TEXTUREACCESS_STATIC, size, size);
     SDL_QueryTexture(land_texture, &format, NULL, NULL, &width);
     fmt = SDL_AllocFormat(format);
-    
+
     // Convert height map to pixel color map
     Uint8 land_pixels[size*size];
     for(int columns=0; columns < size*size; columns++) {
@@ -61,8 +61,8 @@ int render(long double height[], int size){
     SDL_UpdateTexture(land_texture, NULL, land_pixels, width * sizeof(Uint8));
     SDL_Rect land_source = {0,0,size,size};
     SDL_Rect land_dest = {0,0,size,size};
-    
-    
+
+
     // Create some clouds
     Uint8 cloud_pixels[size*size];
     for(int columns=0; columns < size*size; columns++) {
@@ -147,7 +147,7 @@ int render(long double height[], int size){
     sprites[0].dest.h =window_w/4;
     
     float cloud_speed = 0.005; // In pixels per millisecond
-    
+
     // Main loop that updates at vsync in case we ever need animations
     Uint32 last_update_time = SDL_GetTicks();
     while (true) {
@@ -173,7 +173,7 @@ int render(long double height[], int size){
             sprites[0].dest.w =window_w/4;
             sprites[0].dest.h =window_w/4;
         }
-        
+
         Uint32 time_since_update = SDL_GetTicks() - last_update_time;
         if ((int)(time_since_update * cloud_speed) != 0) {
             cloud_dest.x = cloud_dest.x + (int)(time_since_update * cloud_speed);
@@ -197,6 +197,3 @@ int render(long double height[], int size){
     SDL_Quit();
     return 0;
 }
-
-
-
