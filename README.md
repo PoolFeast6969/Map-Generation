@@ -3,3 +3,5 @@ what is this i dont even know whats going on or what is happening someone please
 
 
 ![Demo](https://cdn.discordapp.com/attachments/366395988601995284/376644721164025858/Screen_Shot_2017-11-05_at_7.11.20_pm.png)
+
+![Demo](https://cdn.discordapp.com/attachments/366395988601995284/377702786038759426/Screen_Shot_2017-11-08_at_5.15.51_pm.png)
