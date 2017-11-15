@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 
-int render(long double height[], int size){
+int render(float height[], int size){
     //Start SDL
     SDL_Init( SDL_INIT_VIDEO );
     SDL_Window *window = SDL_CreateWindow(
@@ -95,11 +95,11 @@ int render(long double height[], int size){
     SDL_RenderCopyEx(renderer, cloud_texture, &cloud_source, &cloud_dest, 90, NULL, SDL_FLIP_NONE);
     // Something
     SDL_SetRenderTarget(renderer, NULL);
-    
+
     const char *sprite_names[] = {"spitfire"};
-    
+
     int sprite_amount = sizeof(sprite_names) / sizeof(const char *);
-    
+
     struct sprite {
         SDL_Surface* surface;
         SDL_Texture* texture;
@@ -109,7 +109,7 @@ int render(long double height[], int size){
     };
 
     struct sprite sprites[sprite_amount];
-    
+
     // Load sprites
     for (int i = 0; i < sprite_amount; i++) {
         // Organise the filename extension
@@ -117,8 +117,6 @@ int render(long double height[], int size){
         strcat(sprites[i].filename, ".bmp");
         // Load the sprite from the image
         sprites[i].surface = SDL_LoadBMP(sprites[i].filename);
-        // Make white areas transparent
-        SDL_SetColorKey(sprites[i].surface, SDL_TRUE, SDL_MapRGB(sprites[i].surface->format, 255, 255, 255));
         // Convert to 8 bit
         SDL_ConvertSurface(sprites[i].surface, fmt, 0);
         // Create texture
@@ -126,26 +124,26 @@ int render(long double height[], int size){
         // Delete surface or something
         SDL_FreeSurface(sprites[i].surface);
     }
-    
+
     int window_h;
     int window_w;
     SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
-    
+
     cloud_dest.x = -window_w*2;
     land_dest.w = window_w*3;
     land_dest.h = window_w*3;
-    
+
     cloud_dest.w = window_w*3;
     cloud_dest.h = window_w*3;
-    
+
     land_source.w = window_w*3;
-    
+
     sprites[0].dest.x = window_w/2-window_w/4/2;
     sprites[0].dest.y = 2*window_h/3;
-    
+
     sprites[0].dest.w =window_w/4;
     sprites[0].dest.h =window_w/4;
-    
+
     float cloud_speed = 0.005; // In pixels per millisecond
 
     // Main loop that updates at vsync in case we ever need animations
@@ -157,19 +155,19 @@ int render(long double height[], int size){
         } else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
             window_w = event.window.data1;
             window_h = event.window.data2;
-            
+
             cloud_dest.x = -window_w*2;
             land_dest.w = window_w*3;
             land_dest.h = window_w*3;
-            
+
             cloud_dest.w = window_w*3;
             cloud_dest.h = window_w*3;
-            
+
             land_source.w = window_w*3;
             // 0 = player/spitfire
             sprites[0].dest.x = window_w/2-window_w/4/2;
             sprites[0].dest.y = 2*window_h/3;
-            
+
             sprites[0].dest.w =window_w/4;
             sprites[0].dest.h =window_w/4;
         }

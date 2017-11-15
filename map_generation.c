@@ -12,7 +12,7 @@
 int edge = 2; /* The size of the ocean edge */
 float flooding = 2.5; /* How high the ocean rises */
 int generations = 30; /* Number of times the changes will be repeated */
-int cleaning = 5; /* The number of cleaning up cycles run */
+int cleaning = 0; /* The number of cleaning up cycles run */
 
 int higher = 0;
 int lower = 0;
@@ -23,7 +23,7 @@ int avg_ground = 0;
 
 int i, j, k;
 
-long double z[size][size]; // Making the matrix which will store the altitudes
+float z[1000][1000]; // Making the matrix which will store the altitudes
 
 
 int main () {
@@ -34,7 +34,7 @@ int main () {
     {
       for(j = 0; j < size; j++)
       {
-        z[i][j] = (long double) rand() / RAND_MAX + 1;
+        z[i][j] = (float) rand() / RAND_MAX + 1;
       }
     }
 
