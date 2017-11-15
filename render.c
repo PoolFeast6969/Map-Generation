@@ -96,7 +96,7 @@ int render(float height[], int size){
     // Something
     SDL_SetRenderTarget(renderer, NULL);
 
-    const char *sprite_names[] = {"spitfire"};
+    const char *sprite_names[] = {"spitfire","me109","arvo_lancaster","mosquito"};
 
     int sprite_amount = sizeof(sprite_names) / sizeof(const char *);
 
@@ -183,7 +183,7 @@ int render(float height[], int size){
         // Add the clouds
         SDL_RenderCopy(renderer,cloud_complete_texture, &cloud_source, &cloud_dest);
         // Add plane
-        SDL_RenderCopyEx(renderer, sprites[0].texture, NULL, &sprites[0].dest, 0, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, sprites[2].texture, NULL, &sprites[0].dest, 0, NULL, SDL_FLIP_NONE);
         // Show the completed frame and wait for vsync
         SDL_RenderPresent(renderer);
     }
