@@ -9,30 +9,14 @@
 int render(float height[], int size){
     //Start SDL
     SDL_Init( SDL_INIT_VIDEO );
-    SDL_Window *window = SDL_CreateWindow(
-        "get ",
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        1000, 1000,
-        SDL_WINDOW_RESIZABLE |
-        SDL_WINDOW_OPENGL
-    );
-    SDL_Renderer *renderer = SDL_CreateRenderer(
-        window,
-        -1,
-        SDL_RENDERER_ACCELERATED |
-        SDL_RENDERER_PRESENTVSYNC |
-        SDL_RENDERER_TARGETTEXTURE
-    );
+    SDL_Window *window = SDL_CreateWindow("planes but with less detail",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,1000,1000,SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-
-    SDL_Event event;
-    int width;
 
     Uint32 format;
     SDL_PixelFormat *fmt;
     SDL_Texture *land_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB332, SDL_TEXTUREACCESS_STATIC, size, size);
-    SDL_QueryTexture(land_texture, &format, NULL, NULL, &width);
+    SDL_QueryTexture(land_texture, &format, NULL, NULL, NULL);
     fmt = SDL_AllocFormat(format);
 
     // Convert height map to pixel color map
@@ -58,7 +42,7 @@ int render(float height[], int size){
         }
     }
     // Put the background into a texture
-    SDL_UpdateTexture(land_texture, NULL, land_pixels, width * sizeof(Uint8));
+    SDL_UpdateTexture(land_texture, NULL, land_pixels, size * sizeof(Uint8));
     SDL_Rect land_source = {0,0,size,size};
     SDL_Rect land_dest = {0,0,size,size};
 
@@ -77,7 +61,7 @@ int render(float height[], int size){
     }
     SDL_Texture *cloud_complete_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB332, SDL_TEXTUREACCESS_TARGET, size, size);
     SDL_SetRenderTarget(renderer, cloud_complete_texture);
-    SDL_Surface *cloud_surface = SDL_CreateRGBSurfaceWithFormatFrom(cloud_pixels, size, size, 0,width * sizeof(Uint8), format);
+    SDL_Surface *cloud_surface = SDL_CreateRGBSurfaceWithFormatFrom(cloud_pixels, size, size, 0,size * sizeof(Uint8), format);
     SDL_SetColorKey(cloud_surface, SDL_TRUE, SDL_MapRGB(fmt, 0, 0, 0));
     SDL_Texture *cloud_texture = SDL_CreateTextureFromSurface(renderer,cloud_surface);
     SDL_Rect cloud_source = {0,0,size,size};
@@ -96,7 +80,7 @@ int render(float height[], int size){
     // Something
     SDL_SetRenderTarget(renderer, NULL);
 
-    const char *sprite_names[] = {"spitfire","me109","arvo_lancaster","mosquito"};
+    const char *sprite_names[] = {"spitfire","me109","avro_lancaster","mosquito"};
 
     int sprite_amount = sizeof(sprite_names) / sizeof(const char *);
 
@@ -145,7 +129,9 @@ int render(float height[], int size){
     sprites[0].dest.h =window_w/4;
 
     float cloud_speed = 0.005; // In pixels per millisecond
-
+    
+    SDL_Event event;
+    
     // Main loop that updates at vsync in case we ever need animations
     Uint32 last_update_time = SDL_GetTicks();
     while (true) {

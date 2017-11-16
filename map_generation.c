@@ -7,6 +7,9 @@
 
 #define size 1000
 
+// The compliler needs to know that this function exists before it calls it, or something like that
+int render(float[size][size], int);
+
 /* Variables */
 /* int size = 300;  The x and y size of the map */
 int edge = 2; /* The size of the ocean edge */
@@ -27,7 +30,7 @@ float z[1000][1000]; // Making the matrix which will store the altitudes
 
 
 int main () {
-    srand(time(NULL)); // Intiallizes the random shite
+    srand((int)time(NULL)); // Intiallizes the random shite
 
     // This is assigning a random float between 1 and 0 to each cell
     for(i = 0; i < size; i++)
