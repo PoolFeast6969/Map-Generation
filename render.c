@@ -5,6 +5,44 @@
 
 #include "SDL2/SDL.h"
 
+void render2(float height[],const int size) {
+    
+    struct cloud_layer {
+        int height;
+        int density;
+        double *velocities[2];
+        SDL_Surface* surface;
+        SDL_Texture* texture;
+        Uint8 pixels;
+    };
+    
+    // Creates an array of cloud layers with their height and density already set
+    struct cloud_layer cloud_layers[] = {{10, 3},{40, 5},{100, 1}};
+    
+    int cloud_layer_amount = sizeof(cloud_layers) / sizeof(struct cloud_layer);
+    
+    // Get format to make the clouds in
+    SDL_PixelFormat fmt = {SDL_PIXELFORMAT_RGB332};
+    
+    // Load sprites
+    for (int i = 0; i < cloud_layer_amount; i++) {
+        Uint8 pixels[size*size];
+        // Make cloud texture
+        for(int columns=0; columns < size*size; columns++) {
+            if (height[columns] < cloud_layers[i].density) {
+                // Transparent
+                pixels[columns] = SDL_MapRGB(&fmt, 0, 0, 0);
+            } else if (cloud_layers[i].density <= height[columns]){
+                // Greyscale
+                int greyness = (1-(height[columns]-3)/16) * 225 + 30;
+                pixels[columns] = SDL_MapRGB(&fmt, greyness, greyness, greyness);
+            }
+        }
+        printf("%s",pixels);
+        cloud_layers[i].pixels = *pixels;
+    }
+
+}
 
 int render(float height[], int size){
     //Start SDL
@@ -64,22 +102,21 @@ int render(float height[], int size){
     SDL_Surface *cloud_surface = SDL_CreateRGBSurfaceWithFormatFrom(cloud_pixels, size, size, 0,size * sizeof(Uint8), format);
     SDL_SetColorKey(cloud_surface, SDL_TRUE, SDL_MapRGB(fmt, 0, 0, 0));
     SDL_Texture *cloud_texture = SDL_CreateTextureFromSurface(renderer,cloud_surface);
-    SDL_Rect cloud_source = {0,0,size,size};
     SDL_Rect cloud_dest = {0,0,size,size};
     // Create cloud shadows by blacking out the cloud texture
     SDL_Texture *cloud_shadow_texture = SDL_CreateTextureFromSurface(renderer,cloud_surface);
     SDL_SetTextureColorMod(cloud_shadow_texture, 30, 30, 30);
     SDL_SetTextureAlphaMod(cloud_shadow_texture, 140);
-    SDL_Rect cloud_shadow_source = {0,0,size,size};
     SDL_Rect cloud_shadow_dest = {-15,25,size,size};
     // Add the cloud shadows to the frame
     SDL_SetTextureBlendMode(cloud_complete_texture, SDL_BLENDMODE_BLEND);
-    SDL_RenderCopyEx(renderer, cloud_shadow_texture, &cloud_shadow_source, &cloud_shadow_dest, 90, NULL, SDL_FLIP_NONE);
+    SDL_RenderCopyEx(renderer, cloud_shadow_texture, NULL, &cloud_shadow_dest, 90, NULL, SDL_FLIP_NONE);
     // Add the clouds to the frame
-    SDL_RenderCopyEx(renderer, cloud_texture, &cloud_source, &cloud_dest, 90, NULL, SDL_FLIP_NONE);
+    SDL_RenderCopyEx(renderer, cloud_texture, NULL, &cloud_dest, 90, NULL, SDL_FLIP_NONE);
     // Something
     SDL_SetRenderTarget(renderer, NULL);
-
+    SDL_FreeSurface(cloud_surface);
+    
     const char *sprite_names[] = {"spitfire","me109","avro_lancaster","mosquito"};
 
     int sprite_amount = sizeof(sprite_names) / sizeof(const char *);
@@ -125,8 +162,8 @@ int render(float height[], int size){
     sprites[0].dest.x = window_w/2-window_w/4/2;
     sprites[0].dest.y = 2*window_h/3;
 
-    sprites[0].dest.w =window_w/4;
-    sprites[0].dest.h =window_w/4;
+    sprites[0].dest.w = window_w/4 + sprites[0].surface->w;
+    sprites[0].dest.h = window_w/4 + sprites[0].surface->h;
 
     float cloud_speed = 0.005; // In pixels per millisecond
     
@@ -167,9 +204,9 @@ int render(float height[], int size){
         // Add the land to the frame
         SDL_RenderCopy(renderer,land_texture,&land_source,&land_dest);
         // Add the clouds
-        SDL_RenderCopy(renderer,cloud_complete_texture, &cloud_source, &cloud_dest);
+        SDL_RenderCopy(renderer,cloud_complete_texture, NULL, &cloud_dest);
         // Add plane
-        SDL_RenderCopyEx(renderer, sprites[2].texture, NULL, &sprites[0].dest, 0, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(renderer, sprites[0].texture, NULL, &sprites[0].dest, 0, NULL, SDL_FLIP_NONE);
         // Show the completed frame and wait for vsync
         SDL_RenderPresent(renderer);
     }

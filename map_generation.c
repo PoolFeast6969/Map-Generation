@@ -8,7 +8,7 @@
 #define size 1000
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int render(float[size][size], int);
+int render2(float[size][size], int);
 
 /* Variables */
 /* int size = 300;  The x and y size of the map */
@@ -26,7 +26,7 @@ int avg_ground = 0;
 
 int i, j, k;
 
-float z[1000][1000]; // Making the matrix which will store the altitudes
+float z[size][size]; // Making the matrix which will store the altitudes
 
 
 int main () {
@@ -176,5 +176,5 @@ int main () {
         }
       }
     }
-    render(z, size);
+    render2(z, size);
 }
