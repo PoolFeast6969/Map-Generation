@@ -111,15 +111,17 @@ int render(float height[], int size){
     // Sprites
     //
     
-    const char *sprite_names[] = {"spitfire","me109","avro_lancaster","mosquito"};
+    // Avaliable: {"spitfire","me109","avro_lancaster","mosquito"}
+    
+    const char *sprite_names[] = {"spitfire"};
     
     int sprite_amount = sizeof(sprite_names) / sizeof(char *);
     
     struct sprite {
         SDL_Surface* surface;
         SDL_Texture* texture;
-        SDL_Rect dest;
-        SDL_Rect source;
+        double *position;
+        int size;
         char filename[];
     };
     
@@ -137,15 +139,17 @@ int render(float height[], int size){
         // Create texture
         sprites[i].texture = SDL_CreateTextureFromSurface(renderer, sprites[i].surface);
         // Delete surface or something
-        SDL_FreeSurface(sprites[i].surface);
-        
+        double position[] = {0,0};
+        sprites[i].position = position;
     }
 
     //
     // Loop
     //
     
+    // yep all these pixels are the same size
     double pixel_scaling = 5;
+    
     double view_velocity[] = {-12,-12};
     SDL_Event window_event;
     int window_h;
@@ -167,12 +171,16 @@ int render(float height[], int size){
                 background_layers[i].last_update_time[a] = SDL_GetTicks();
             }
             SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
-            SDL_Rect new_position = {background_layers[i].position[0],background_layers[i].position[1], window_w*pixel_scaling, window_w*pixel_scaling};
+            SDL_Rect new_position = {background_layers[i].position[0],background_layers[i].position[1], size*pixel_scaling, size*pixel_scaling};
             // Add to frame
             SDL_RenderCopy(renderer,background_layers[i].texture,NULL,&new_position);
         }
         
-        SDL_RenderCopyEx(renderer, sprites[0].texture, &sprites[0].source, &sprites[0].dest, 0, NULL, SDL_FLIP_NONE);
+        // Draw each of the sprites with the correct position
+        for (int i = 0; i < sprite_amount; i++) {
+            SDL_Rect dest = {sprites[i].position[0],sprites[i].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
+            SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 135, NULL, SDL_FLIP_NONE);
+        }
         
         // Show the completed frame and wait for vsync
         SDL_RenderPresent(renderer);
