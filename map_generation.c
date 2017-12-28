@@ -8,7 +8,7 @@
 #define size 1000
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int render2(float[size][size], int);
+int render(float[size][size], int);
 
 /* Variables */
 /* int size = 300;  The x and y size of the map */
@@ -176,5 +176,5 @@ int main () {
         }
       }
     }
-    render2(z, size);
+    render(z, size);
 }
