@@ -22,6 +22,7 @@ int render(float height[], int size){
     struct background_layer {
         int distance;
         double density;
+        int shadow_offset[2];
         double position[2];
         double last_update_time[2];
         SDL_Texture* texture;
@@ -66,7 +67,7 @@ int render(float height[], int size){
     };
     
     // Creates an array of cloud layers with their height and density already set
-    struct background_layer background_layers[] = {land,{400,3},{340, 5},{100, 4}};
+    struct background_layer background_layers[] = {land,{400,3,{-15,25}},{340, 5,{-15,25}},{100, 4,{-25,35}}};
     
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
     
@@ -95,7 +96,7 @@ int render(float height[], int size){
         SDL_Texture *cloud_shadow_texture = SDL_CreateTextureFromSurface(renderer,cloud_surface);
         SDL_SetTextureColorMod(cloud_shadow_texture, 30, 30, 30);
         SDL_SetTextureAlphaMod(cloud_shadow_texture, 140);
-        SDL_Rect cloud_shadow_dest = {-15,25,size,size};
+        SDL_Rect cloud_shadow_dest = {background_layers[i].shadow_offset[0],background_layers[i].shadow_offset[1],size,size};
         // Add the cloud shadows to the frame
         SDL_SetTextureBlendMode(cloud_complete_texture, SDL_BLENDMODE_BLEND);
         SDL_RenderCopyEx(renderer, cloud_shadow_texture, NULL, &cloud_shadow_dest, 90, NULL, SDL_FLIP_NONE);
