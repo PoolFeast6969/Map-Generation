@@ -62,7 +62,7 @@ int render(float height[], int size){
     };
     
     // Creates an array of cloud layers with their height and density already set
-    struct background_layer background_layers[] = {land,{400,14,{-15,25}},{340, 13,{-15,25}},{100, 12,{-25,35}}};
+    struct background_layer background_layers[] = {land,{400,8,{-15,25}},{340,8,{-15,25}},{100, 12,{-25,35}}};
     
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
     
@@ -144,7 +144,7 @@ int render(float height[], int size){
     //
     
     // yep all these pixels are the same size
-    double pixel_scaling = 3;
+    double pixel_scaling = 5;
     
     double view_velocity[] = {-12,-12};
     SDL_Event window_event;
