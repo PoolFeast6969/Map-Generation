@@ -14,7 +14,7 @@ int render(float[size][size], int);
 /* int size = 300;  The x and y size of the map */
 int edge = 2; /* The size of the ocean edge */
 int generations = 30; /* Number of times the changes will be repeated */
-int cleaning = 0; /* The number of cleaning up cycles run */
+int cleaning = 10; /* The number of cleaning up cycles run */
 
 int higher = 0;
 int lower = 0;

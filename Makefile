@@ -1,14 +1,14 @@
 SOURCES=map_generation.c render.c
 DEBUG=-g
 LIBS=-lSDL2
-CFLAGS=-Wall -pedantic $(DEBUG) $(LIBS)
+CFLAGS=-Wall -pedantic $(DEBUG)
 OBJECTS=map_generation.o render.o
 CC=gcc
 EXE=lis
 
 all: $(OBJECTS)
 	@echo "Building the program..."
-	$(CC) $(CFLAGS) -o $(EXE) $(OBJECTS)
+	$(CC) $(CFLAGS) -o $(EXE) $(OBJECTS) $(LIBS)
 
 # This is the part that tells the make file to only compile when it's changed
 map_generation.o: map_generation.c
