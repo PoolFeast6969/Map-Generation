@@ -4,3 +4,4 @@
 lis
 *.o
 vgcore.*
+.vscode
