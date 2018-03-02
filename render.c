@@ -36,23 +36,18 @@ int render(float height[], int size){
     // Convert height map to pixel color map
     Uint8 land_pixels[size*size];
     for(int columns=0; columns < size*size; columns++) {
-        if (height[columns] == 0) {
+        if (height[columns] <= 7) {
             // Water
-            land_pixels[columns] = SDL_MapRGB(pixel_format, 50, 120, 200);
+	    if (height[columns] < 0) {
+		printf("%f",height[columns]);
+	    }
+            int blueness = height[columns]/7 * 120+ 50;
+            land_pixels[columns] = SDL_MapRGB(pixel_format, 50, 120*(height[columns]/7), blueness);
         }
-        else if (height[columns] > 0) {
-            if (height[columns] < 0) {
-                // Sand
-                land_pixels[columns] = SDL_MapRGB(pixel_format, 255, 255, 150);
-            } else if (height[columns] < 7) {
-                // Forest
-                int greenness = height[columns]/7 * 130 + 90;
-                
-                land_pixels[columns] = SDL_MapRGB(pixel_format, 0, greenness, 0);
-            } else if (height[columns] >= 7) {
-                // Snow
-                land_pixels[columns] = SDL_MapRGB(pixel_format, 0, 100, 0);
-            }
+        else if (height[columns] > 7) {
+	    // Forest
+	    int greenness = (height[columns]-7)/8 * 130+ 95;
+	    land_pixels[columns] = SDL_MapRGB(pixel_format, 0, greenness, 0);
         }
     }
     
@@ -67,7 +62,7 @@ int render(float height[], int size){
     };
     
     // Creates an array of cloud layers with their height and density already set
-    struct background_layer background_layers[] = {land,{400,3,{-15,25}},{340, 5,{-15,25}},{100, 4,{-25,35}}};
+    struct background_layer background_layers[] = {land,{400,14,{-15,25}},{340, 13,{-15,25}},{100, 12,{-25,35}}};
     
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
     
@@ -149,7 +144,7 @@ int render(float height[], int size){
     //
     
     // yep all these pixels are the same size
-    double pixel_scaling = 5;
+    double pixel_scaling = 3;
     
     double view_velocity[] = {-12,-12};
     SDL_Event window_event;

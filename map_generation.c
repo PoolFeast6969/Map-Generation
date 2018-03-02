@@ -13,7 +13,6 @@ int render(float[size][size], int);
 /* Variables */
 /* int size = 300;  The x and y size of the map */
 int edge = 2; /* The size of the ocean edge */
-float flooding = 2.5; /* How high the ocean rises */
 int generations = 30; /* Number of times the changes will be repeated */
 int cleaning = 0; /* The number of cleaning up cycles run */
 
@@ -37,7 +36,7 @@ int main () {
     {
       for(j = 0; j < size; j++)
       {
-        z[i][j] = (float) rand() / RAND_MAX + 1;
+        z[i][j] = (float) rand() / RAND_MAX + 4;
       }
     }
 
@@ -86,17 +85,6 @@ int main () {
           } else if (higher > 5) {
             z[i][j] -= 1.2;
           }
-        }
-      }
-    }
-
-    // Raising the ocean
-    for(i = 0; i < size; i++){
-      for(j = 0; j < size; j++){
-        z[i][j] -= flooding;
-
-        if (z[i][j] < 0) {
-          z[i][j] = 0;
         }
       }
     }
