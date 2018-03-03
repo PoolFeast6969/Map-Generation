@@ -9,8 +9,8 @@ int generate_terrain (size_t size, float(**z)[size][size]) {
     /* Variables */
     /* int size = 300;  The x and y size of the map */
     int edge = 2; /* The size of the ocean edge */
-    int generations = 200; /* Number of times the changes will be repeated */
-    int cleaning = 10; /* The number of cleaning up cycles run */
+    int generations = 40; /* Number of times the changes will be repeated */
+    int cleaning = 2; /* The number of cleaning up cycles run */
 
     int higher = 0;
     int lower = 0;
