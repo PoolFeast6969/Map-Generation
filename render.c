@@ -25,7 +25,7 @@ int main(){
     size_t terrain_size = 1000;
 
     // Make array to pass to terrain generator for it to fill
-    float (*height)[terrain_size][terrain_size] = NULL;
+    float (*height)[terrain_size][terrain_size];
     generate_terrain(terrain_size, &height);
 
     //
@@ -56,12 +56,12 @@ int main(){
                 printf("%f",(*height)[columns][rows]);
             }
                 int blueness = (*height)[columns][rows]/7 * 120+ 50;
-                land_pixels[columns][rows] = SDL_MapRGB(pixel_format, 50, 120*((*height)[columns][rows]/7), blueness);
+                land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 50, 120*((*height)[columns][rows]/7), blueness, 255);
             }
             else if ((*height)[columns][rows] > 7) {
             // Forest
             int greenness = ((*height)[columns][rows]-7)/8 * 130+ 95;
-            land_pixels[columns][rows] = SDL_MapRGB(pixel_format, 0, greenness, 0);
+            land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 0, greenness, 0, 255);
             }
         }
     }
@@ -90,18 +90,17 @@ int main(){
             for(int rows=0; rows < terrain_size; rows++) {
                 if ((*height)[columns][rows] < background_layers[i].density) {
                     // Transparent
-                    background_layers[i].pixels[terrain_size*columns+rows] = SDL_MapRGB(pixel_format, 0, 0, 0);
+                    background_layers[i].pixels[terrain_size*columns+rows] = SDL_MapRGBA(pixel_format, 0, 0, 0, 0);
                 } else if (background_layers[i].density <= (*height)[columns][rows]){
                     // Greyscale
                     int greyness = (1-((*height)[columns][rows]-background_layers[i].density)/16) * 225 + 30;
-                    background_layers[i].pixels[terrain_size*columns+rows] = SDL_MapRGB(pixel_format, greyness, greyness, greyness);
+                    background_layers[i].pixels[terrain_size*columns+rows] = SDL_MapRGBA(pixel_format, greyness, greyness, greyness, 255);
                 }
             }
         }
         SDL_Texture *cloud_complete_texture = SDL_CreateTexture(renderer, pixel_format_id, SDL_TEXTUREACCESS_TARGET, terrain_size, terrain_size);
         SDL_SetRenderTarget(renderer, cloud_complete_texture);
         SDL_Surface *cloud_surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint32), pixel_format_id);
-        SDL_SetColorKey(cloud_surface, SDL_TRUE, SDL_MapRGB(pixel_format, 0, 0, 0));
         SDL_Texture *cloud_texture = SDL_CreateTextureFromSurface(renderer,cloud_surface);
         SDL_Rect cloud_dest = {0,0,terrain_size,terrain_size};
         // Create cloud shadows by blacking out the cloud texture
@@ -126,7 +125,7 @@ int main(){
     
     // Avaliable: {"spitfire","me109","avro_lancaster","mosquito","dehavalland_vampire","horten_229","p38_lightening"}
     
-    const char *sprite_names[] = {"spitfire"};
+    const char *sprite_names[] = {"dehavalland_vampire"};
     
     int sprite_amount = sizeof(sprite_names) / sizeof(char *);
     
@@ -161,7 +160,7 @@ int main(){
     //
     
     // yep all these pixels are the same size
-    double pixel_scaling = 2;
+    double pixel_scaling = 5;
     
     double view_velocity[] = {-12,-12};
     SDL_Event window_event;
