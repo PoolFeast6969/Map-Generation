@@ -12,17 +12,21 @@ int main(){
     //
     // Init
     //
-    
-    size_t terrain_size = 1000;
-
-    // Make array to pass to terrain generator for it to fill
-    float (*height)[terrain_size][terrain_size] = NULL;
-    generate_terrain(terrain_size, &height);
 
     SDL_Init( SDL_INIT_VIDEO );
     SDL_Window *window = SDL_CreateWindow("planes but with less detail",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,1000,1000,SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     SDL_Renderer *renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+
+    //
+    // Terrain Heights Generation
+    //
+
+    size_t terrain_size = 1000;
+
+    // Make array to pass to terrain generator for it to fill
+    float (*height)[terrain_size][terrain_size] = NULL;
+    generate_terrain(terrain_size, &height);
 
     //
     // Background

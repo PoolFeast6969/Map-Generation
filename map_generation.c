@@ -9,8 +9,8 @@ int generate_terrain (size_t size, float(**z)[size][size]) {
     /* Variables */
     /* int size = 300;  The x and y size of the map */
     int edge = 2; /* The size of the ocean edge */
-    int generations = 30; /* Number of times the changes will be repeated */
-    int cleaning = 0; /* The number of cleaning up cycles run */
+    int generations = 200; /* Number of times the changes will be repeated */
+    int cleaning = 10; /* The number of cleaning up cycles run */
 
     int higher = 0;
     int lower = 0;
@@ -19,10 +19,10 @@ int generate_terrain (size_t size, float(**z)[size][size]) {
     int ground = 0;
     int avg_ground = 0;
 
-    // Making the matrix which will store the altitudes
-    //float z[size][size] = = malloc(sizeof(float[size][size]));
-    (*z) = malloc(sizeof **z);
     int i, j, k;
+
+    // Allocating memery for the matrix which will store the altitudes
+    (*z) = malloc(sizeof(**z));
 
     srand((int)time(NULL)); // Intiallizes the random shite
     // This is assigning a random float between 1 and 0 to each cell
