@@ -24,8 +24,9 @@ int main(){
 
     size_t terrain_size = 1000;
 
-    // Make array to pass to terrain generator for it to fill
+    // Make array for the terrain generator to fill
     float (*height)[terrain_size][terrain_size];
+    // Run terrain generation
     generate_terrain(terrain_size, &height);
 
     //
@@ -33,50 +34,47 @@ int main(){
     //
     
     struct background_layer {
-        int distance;
-        double density;
+        int distance; // Distance from view
+        double density; // Cloud thickness
         int shadow_offset[2];
         double position[2];
-        double last_update_time[2];
-        SDL_Texture* texture;
-        Uint32 *pixels;
+        double last_update_time[2]; // When it was last redrawn
+        SDL_Texture* texture; // Texture in video memory
+        Uint32 *pixels; // Pixel data in normal memory
     };
     
-    // Get format to make the textures in
-    Uint32 pixel_format_id = SDL_PIXELFORMAT_RGBA32;
-    SDL_PixelFormat *pixel_format = SDL_AllocFormat(pixel_format_id);
+    // Set pixel format to make the textures in
+    Uint32 pixel_format_id = SDL_PIXELFORMAT_RGBA32; // A 32 bit format that lets the OS decide specifics
+    SDL_PixelFormat *pixel_format = SDL_AllocFormat(pixel_format_id); // Get the actual format object from its ID
     
     // Convert height map to pixel color map
-    Uint32 land_pixels[terrain_size][terrain_size];
+    Uint32 land_pixels[terrain_size][terrain_size]; // Create the array to store the pixels
     for(int columns=0; columns < terrain_size; columns++) {
         for(int rows=0; rows < terrain_size; rows++) {
             if ((*height)[columns][rows] <= 7) {
-                // Water
-            if ((*height)[columns][rows] < 0) {
-                printf("%f",(*height)[columns][rows]);
-            }
+                // Draw Water
                 int blueness = (*height)[columns][rows]/7 * 120+ 50;
                 land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 50, 120*((*height)[columns][rows]/7), blueness, 255);
-            }
-            else if ((*height)[columns][rows] > 7) {
-            // Forest
-            int greenness = ((*height)[columns][rows]-7)/8 * 130+ 95;
-            land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 0, greenness, 0, 255);
+            } else if ((*height)[columns][rows] > 7) {
+                // Draw Forest
+                int greenness = ((*height)[columns][rows]-7)/8 * 130+ 95;
+                land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 0, greenness, 0, 255);
             }
         }
     }
     
-    // Put the background into a surface
-    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint32), pixel_format_id);
+    // Put the land image into a texture
+    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint32), pixel_format_id); // Through a surface
     SDL_Texture *land_texture = SDL_CreateTextureFromSurface(renderer,land_surface);
     
+    // Instantiate the land layer struct
     struct background_layer land = {
         .distance = 500,
         .texture = SDL_CreateTextureFromSurface(renderer,land_surface),
         .pixels = *land_pixels
     };
     
-    // Creates an array of cloud layers with their height and density already set
+    // Creates an array of cloud layers with their height and density already set, and the land already in the background
     struct background_layer background_layers[] = {land,{400,8,{-15,25}},{340,8,{-15,25}},{100, 12,{-25,35}}};
     
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
@@ -85,19 +83,19 @@ int main(){
     for (int i = 1; i < background_layer_amount; i++) {
         // Create a cloud pixel map from the height map provided
         Uint32 pixels[terrain_size][terrain_size];
-        background_layers[i].pixels = *pixels;
         for(int columns=0; columns < terrain_size; columns++) {
             for(int rows=0; rows < terrain_size; rows++) {
                 if ((*height)[columns][rows] < background_layers[i].density) {
-                    // Transparent
-                    background_layers[i].pixels[terrain_size*columns+rows] = SDL_MapRGBA(pixel_format, 0, 0, 0, 0);
+                    // Draw Transparent
+                    pixels[columns][rows] = SDL_MapRGBA(pixel_format, 0, 0, 0, 0);
                 } else if (background_layers[i].density <= (*height)[columns][rows]){
-                    // Greyscale
+                    // Draw Greyscale
                     int greyness = (1-((*height)[columns][rows]-background_layers[i].density)/16) * 225 + 30;
-                    background_layers[i].pixels[terrain_size*columns+rows] = SDL_MapRGBA(pixel_format, greyness, greyness, greyness, 255);
+                    pixels[columns][rows] = SDL_MapRGBA(pixel_format, greyness, greyness, greyness, 255);
                 }
             }
         }
+        background_layers[i].pixels = *pixels; // Add the pixels to the struct for this layer
         SDL_Texture *cloud_complete_texture = SDL_CreateTexture(renderer, pixel_format_id, SDL_TEXTUREACCESS_TARGET, terrain_size, terrain_size);
         SDL_SetRenderTarget(renderer, cloud_complete_texture);
         SDL_Surface *cloud_surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint32), pixel_format_id);

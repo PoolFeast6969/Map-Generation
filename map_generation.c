@@ -158,5 +158,5 @@ int generate_terrain (size_t size, float(**z)[size][size]) {
         }
       }
     }
-    return 1;
+    return 0;
 }
