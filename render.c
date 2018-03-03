@@ -5,11 +5,20 @@
 
 #include "SDL2/SDL.h"
 
-int render(float height[], int size){
+// The compliler needs to know that this function exists before it calls it, or something like that
+int generate_terrain(size_t size, float(**z)[size][size]);
+
+int main(){
     //
     // Init
     //
     
+    size_t terrain_size = 1000;
+
+    // Make array to pass to terrain generator for it to fill
+    float (*height)[terrain_size][terrain_size] = NULL;
+    generate_terrain(terrain_size, &height);
+
     SDL_Init( SDL_INIT_VIDEO );
     SDL_Window *window = SDL_CreateWindow("planes but with less detail",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,1000,1000,SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     SDL_Renderer *renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
@@ -34,31 +43,33 @@ int render(float height[], int size){
     SDL_PixelFormat *pixel_format = SDL_AllocFormat(pixel_format_id);
     
     // Convert height map to pixel color map
-    Uint8 land_pixels[size*size];
-    for(int columns=0; columns < size*size; columns++) {
-        if (height[columns] <= 7) {
-            // Water
-	    if (height[columns] < 0) {
-		printf("%f",height[columns]);
-	    }
-            int blueness = height[columns]/7 * 120+ 50;
-            land_pixels[columns] = SDL_MapRGB(pixel_format, 50, 120*(height[columns]/7), blueness);
-        }
-        else if (height[columns] > 7) {
-	    // Forest
-	    int greenness = (height[columns]-7)/8 * 130+ 95;
-	    land_pixels[columns] = SDL_MapRGB(pixel_format, 0, greenness, 0);
+    Uint8 land_pixels[terrain_size][terrain_size];
+    for(int columns=0; columns < terrain_size; columns++) {
+        for(int rows=0; rows < terrain_size; rows++) {
+            if ((*height)[columns][rows] <= 7) {
+                // Water
+            if ((*height)[columns][rows] < 0) {
+            printf("%f",(*height)[columns][rows]);
+            }
+                int blueness = (*height)[columns][rows]/7 * 120+ 50;
+                land_pixels[columns][rows] = SDL_MapRGB(pixel_format, 50, 120*((*height)[columns][rows]/7), blueness);
+            }
+            else if ((*height)[columns][rows] > 7) {
+            // Forest
+            int greenness = ((*height)[columns][rows]-7)/8 * 130+ 95;
+            land_pixels[columns][rows] = SDL_MapRGB(pixel_format, 0, greenness, 0);
+            }
         }
     }
     
     // Put the background into a surface
-    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, size, size, 0,size * sizeof(Uint8), pixel_format_id);
+    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint8), pixel_format_id);
     SDL_Texture *land_texture = SDL_CreateTextureFromSurface(renderer,land_surface);
     
     struct background_layer land = {
         .distance = 500,
         .texture = SDL_CreateTextureFromSurface(renderer,land_surface),
-        .pixels = land_pixels
+        .pixels = *land_pixels
     };
     
     // Creates an array of cloud layers with their height and density already set
@@ -69,29 +80,31 @@ int render(float height[], int size){
     // Convert height map to clouds
     for (int i = 1; i < background_layer_amount; i++) {
         // Create a cloud pixel map from the height map provided
-        Uint8 pixels[size*size];
-        background_layers[i].pixels = pixels;
-        for(int columns=0; columns < size*size; columns++) {
-            if (height[columns] < background_layers[i].density) {
-                // Transparent
-                background_layers[i].pixels[columns] = SDL_MapRGB(pixel_format, 0, 0, 0);
-            } else if (background_layers[i].density <= height[columns]){
-                // Greyscale
-                int greyness = (1-(height[columns]-background_layers[i].density)/16) * 225 + 30;
-                background_layers[i].pixels[columns] = SDL_MapRGB(pixel_format, greyness, greyness, greyness);
+        Uint8 pixels[terrain_size][terrain_size];
+        background_layers[i].pixels = *pixels;
+        for(int columns=0; columns < terrain_size; columns++) {
+            for(int rows=0; rows < terrain_size; rows++) {
+                if ((*height)[columns][rows] < background_layers[i].density) {
+                    // Transparent
+                    background_layers[i].pixels[terrain_size*columns+rows] = SDL_MapRGB(pixel_format, 0, 0, 0);
+                } else if (background_layers[i].density <= (*height)[columns][rows]){
+                    // Greyscale
+                    int greyness = (1-((*height)[columns][rows]-background_layers[i].density)/16) * 225 + 30;
+                    background_layers[i].pixels[terrain_size*columns+rows] = SDL_MapRGB(pixel_format, greyness, greyness, greyness);
+                }
             }
         }
-        SDL_Texture *cloud_complete_texture = SDL_CreateTexture(renderer, pixel_format_id, SDL_TEXTUREACCESS_TARGET, size, size);
+        SDL_Texture *cloud_complete_texture = SDL_CreateTexture(renderer, pixel_format_id, SDL_TEXTUREACCESS_TARGET, terrain_size, terrain_size);
         SDL_SetRenderTarget(renderer, cloud_complete_texture);
-        SDL_Surface *cloud_surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, size, size, 0,size * sizeof(Uint8), pixel_format_id);
+        SDL_Surface *cloud_surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint8), pixel_format_id);
         SDL_SetColorKey(cloud_surface, SDL_TRUE, SDL_MapRGB(pixel_format, 0, 0, 0));
         SDL_Texture *cloud_texture = SDL_CreateTextureFromSurface(renderer,cloud_surface);
-        SDL_Rect cloud_dest = {0,0,size,size};
+        SDL_Rect cloud_dest = {0,0,terrain_size,terrain_size};
         // Create cloud shadows by blacking out the cloud texture
         SDL_Texture *cloud_shadow_texture = SDL_CreateTextureFromSurface(renderer,cloud_surface);
         SDL_SetTextureColorMod(cloud_shadow_texture, 30, 30, 30);
         SDL_SetTextureAlphaMod(cloud_shadow_texture, 140);
-        SDL_Rect cloud_shadow_dest = {background_layers[i].shadow_offset[0],background_layers[i].shadow_offset[1],size,size};
+        SDL_Rect cloud_shadow_dest = {background_layers[i].shadow_offset[0],background_layers[i].shadow_offset[1],terrain_size,terrain_size};
         // Add the cloud shadows to the frame
         SDL_SetTextureBlendMode(cloud_complete_texture, SDL_BLENDMODE_BLEND);
         SDL_RenderCopyEx(renderer, cloud_shadow_texture, NULL, &cloud_shadow_dest, 90, NULL, SDL_FLIP_NONE);
@@ -107,7 +120,7 @@ int render(float height[], int size){
     // Sprites
     //
     
-    // Avaliable: {"spitfire","me109","avro_lancaster","mosquito"}
+    // Avaliable: {"spitfire","me109","avro_lancaster","mosquito","dehavalland_vampire","horten_229","p38_lightening"}
     
     const char *sprite_names[] = {"spitfire"};
     
@@ -157,6 +170,7 @@ int render(float height[], int size){
         if (window_event.type == SDL_QUIT) {
             break;
         }
+        
         // Draw each of the background layers with the correct position
         for (int i = 0; i < background_layer_amount; i++) {
             // Determine if it needs to be have its position changed
@@ -167,7 +181,7 @@ int render(float height[], int size){
                 background_layers[i].last_update_time[a] = SDL_GetTicks();
             }
             SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
-            SDL_Rect new_position = {background_layers[i].position[0],background_layers[i].position[1], size*pixel_scaling, size*pixel_scaling};
+            SDL_Rect new_position = {background_layers[i].position[0],background_layers[i].position[1], terrain_size*pixel_scaling, terrain_size*pixel_scaling};
             // Add to frame
             SDL_RenderCopy(renderer,background_layers[i].texture,NULL,&new_position);
         }
