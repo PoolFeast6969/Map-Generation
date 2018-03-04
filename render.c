@@ -217,6 +217,12 @@ int main(){
                     break;
             }
         }
+
+        //Stop you from getting speeding tickets on diagnols 
+        if ((view_velocity[0] != 0) && (view_velocity[1] != 0)){
+            view_velocity[0] = view_velocity[0]*0.5; 
+            view_velocity[1] = view_velocity[1]*0.5;
+        }
         
         // Draw each of the background layers with the correct position
         for (int i = 0; i < background_layer_amount; i++) {
