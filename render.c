@@ -167,6 +167,7 @@ int main(){
     int window_w;
 
     bool run = true;
+    int velocity = 40;
 
     // Main loop that updates at vsync in case we ever need animations
     while (run) {
@@ -180,16 +181,16 @@ int main(){
                     // Check the SDLKey values and move change the coords
                     switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
-                            view_velocity[0] = 12;
+                            view_velocity[0] = velocity;
                             break;
                         case SDLK_RIGHT:
-                            view_velocity[0] = -12;
+                            view_velocity[0] = -velocity;
                             break;
                         case SDLK_UP:
-                            view_velocity[1] = 12;
+                            view_velocity[1] = velocity;
                             break;
                         case SDLK_DOWN:
-                            view_velocity[1] = -12;
+                            view_velocity[1] = -velocity;
                             break;
                         default:
                             break;
