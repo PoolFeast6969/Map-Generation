@@ -81,6 +81,8 @@ int main(){
     
     // Convert height map to clouds
     for (int i = 1; i < background_layer_amount; i++) {
+        // Run terrain generation
+        generate_terrain(terrain_size, &height);
         // Create a cloud pixel map from the height map provided
         Uint32 pixels[terrain_size][terrain_size];
         for(int columns=0; columns < terrain_size; columns++) {
@@ -130,8 +132,9 @@ int main(){
     struct sprite {
         SDL_Surface* surface;
         SDL_Texture* texture;
-        double x;
-        double y;
+        double position[2];
+        double velocity[2];
+        double last_update_time[2];
         int size;
         char filename[];
     };
@@ -150,8 +153,10 @@ int main(){
         // Create texture
         sprites[i].texture = SDL_CreateTextureFromSurface(renderer, sprites[i].surface);
         // Delete surface or something
-        sprites[i].x = 0;
-        sprites[i].y = 0;
+        sprites[i].position[1] = 0;
+        sprites[i].position[0] = 0;
+        sprites[i].velocity[0] = 0;
+        sprites[i].velocity[1] = 0;
     }
 
     //
@@ -160,14 +165,14 @@ int main(){
     
     // yep all these pixels are the same size
     double pixel_scaling = 5;
-    
+
     double view_velocity[] = {0,0};
     SDL_Event window_event;
     int window_h;
     int window_w;
 
     bool run = true;
-    int velocity = 40;
+    int velocity = 1;
 
     // Main loop that updates at vsync in case we ever need animations
     while (run) {
@@ -182,15 +187,19 @@ int main(){
                     switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
                             view_velocity[0] = velocity;
+                            sprites[0].velocity[1] = -velocity;
                             break;
                         case SDLK_RIGHT:
                             view_velocity[0] = -velocity;
+                            sprites[0].velocity[1] = velocity;
                             break;
                         case SDLK_UP:
                             view_velocity[1] = velocity;
+                            sprites[0].velocity[0] = -velocity;
                             break;
                         case SDLK_DOWN:
                             view_velocity[1] = -velocity;
+                            sprites[0].velocity[0] = velocity;
                             break;
                         default:
                             break;
@@ -201,15 +210,19 @@ int main(){
                     switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
                             view_velocity[0] = 0;
+                            sprites[0].velocity[1] = 0;
                             break;
                         case SDLK_RIGHT:
                             view_velocity[0] = 0;
+                            sprites[0].velocity[1] = 0;
                             break;
                         case SDLK_UP:
                             view_velocity[1] = 0;
+                            sprites[0].velocity[0] = 0;
                             break;
                         case SDLK_DOWN:
                             view_velocity[1] = 0;
+                            sprites[0].velocity[0] = 0;
                             break;
                         default:
                             break;
@@ -241,7 +254,12 @@ int main(){
         
         // Draw each of the sprites with the correct position
         for (int i = 0; i < sprite_amount; i++) {
-            SDL_Rect dest = {sprites[i].x,sprites[i].y,sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
+            for (int a = 0; a < 2 ; a++) {
+                double time_since_update = SDL_GetTicks() - sprites[i].last_update_time[a];
+                sprites[i].position[a] = sprites[i].position[a] + sprites[i].velocity[a] * time_since_update;
+                sprites[i].last_update_time[a] = SDL_GetTicks();
+            }
+            SDL_Rect dest = {sprites[i].position[0],sprites[i].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
             SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 135, NULL, SDL_FLIP_NONE);
         }
         
