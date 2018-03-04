@@ -160,52 +160,60 @@ int main(){
     // yep all these pixels are the same size
     double pixel_scaling = 5;
     
-    double view_velocity[] = {-12,-12};
+    double view_velocity[] = {0,0};
     SDL_Event window_event;
     int window_h;
     int window_w;
-    
-    int left; 
-    int right; 
-    int up; 
-    int down; 
-    int horz_speed; 
-    int vert_speed; 
-    int speed = 5;
-    SDL_Event event;
+
+    bool run = true;
 
     // Main loop that updates at vsync in case we ever need animations
-    while (true) {
-        while( SDL_PollEvent( &event ) ){
-            switch( event.type ){
-                // Look for a keypress
+    while (run) {
+        while (SDL_PollEvent(&window_event)){
+            switch( window_event.type ){
+                case SDL_QUIT:
+                    run = false;
+                    break;
+                    // Look for a keypress
                 case SDL_KEYDOWN:
                     // Check the SDLKey values and move change the coords
-                    switch( event.key.keysym.sym ){
+                    switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
-                            left = -1;
+                            view_velocity[0] = 12;
                             break;
                         case SDLK_RIGHT:
-                            right = 1;
+                            view_velocity[0] = -12;
                             break;
                         case SDLK_UP:
-                            up = 1;
+                            view_velocity[1] = 12;
                             break;
                         case SDLK_DOWN:
-                            down = -1;
+                            view_velocity[1] = -12;
                             break;
                         default:
                             break;
                     }
-                }
+                    break;
+                case SDL_KEYUP:
+                    // Check the SDLKey values and move change the coords
+                    switch( window_event.key.keysym.sym ){
+                        case SDLK_LEFT:
+                            view_velocity[0] = 0;
+                            break;
+                        case SDLK_RIGHT:
+                            view_velocity[0] = 0;
+                            break;
+                        case SDLK_UP:
+                            view_velocity[1] = 0;
+                            break;
+                        case SDLK_DOWN:
+                            view_velocity[1] = 0;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
             }
-
-        horz_speed = (right + left)*speed;  
-        vert_speed = (up + down)*speed;      
-
-        SDL_PollEvent(&window_event);
-        if (window_event.type == SDL_QUIT) {
-            break;
         }
         
         // Draw each of the background layers with the correct position
