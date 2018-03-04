@@ -123,14 +123,15 @@ int main(){
     
     // Avaliable: {"spitfire","me109","avro_lancaster","mosquito","dehavalland_vampire","horten_229","p38_lightening"}
     
-    const char *sprite_names[] = {"dehavalland_vampire"};
+    const char *sprite_names[] = {"spitfire"};
     
     int sprite_amount = sizeof(sprite_names) / sizeof(char *);
     
     struct sprite {
         SDL_Surface* surface;
         SDL_Texture* texture;
-        double *position;
+        double x;
+        double y;
         int size;
         char filename[];
     };
@@ -149,8 +150,8 @@ int main(){
         // Create texture
         sprites[i].texture = SDL_CreateTextureFromSurface(renderer, sprites[i].surface);
         // Delete surface or something
-        double position[] = {0,0};
-        sprites[i].position = position;
+        sprites[i].x = 0;
+        sprites[i].y = 0;
     }
 
     //
@@ -233,7 +234,7 @@ int main(){
         
         // Draw each of the sprites with the correct position
         for (int i = 0; i < sprite_amount; i++) {
-            SDL_Rect dest = {sprites[i].position[0],sprites[i].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
+            SDL_Rect dest = {sprites[i].x,sprites[i].y,sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
             SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 135, NULL, SDL_FLIP_NONE);
         }
         
