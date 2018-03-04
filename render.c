@@ -165,8 +165,44 @@ int main(){
     int window_h;
     int window_w;
     
+    int left; 
+    int right; 
+    int up; 
+    int down; 
+    int horz_speed; 
+    int vert_speed; 
+    int speed = 5;
+    SDL_Event event;
+
     // Main loop that updates at vsync in case we ever need animations
     while (true) {
+        while( SDL_PollEvent( &event ) ){
+            switch( event.type ){
+                // Look for a keypress
+                case SDL_KEYDOWN:
+                    // Check the SDLKey values and move change the coords
+                    switch( event.key.keysym.sym ){
+                        case SDLK_LEFT:
+                            left = -1;
+                            break;
+                        case SDLK_RIGHT:
+                            right = 1;
+                            break;
+                        case SDLK_UP:
+                            up = 1;
+                            break;
+                        case SDLK_DOWN:
+                            down = -1;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+
+        horz_speed = (right + left)*speed;  
+        vert_speed = (up + down)*speed;      
+
         SDL_PollEvent(&window_event);
         if (window_event.type == SDL_QUIT) {
             break;
