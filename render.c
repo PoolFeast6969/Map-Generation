@@ -164,7 +164,7 @@ int main(){
     //
     
     // yep all these pixels are the same size
-    double pixel_scaling = 5;
+    double pixel_scaling = 2;
 
     double view_velocity[] = {0,0};
     SDL_Event window_event;
@@ -232,9 +232,11 @@ int main(){
         }
 
         //Stop you from getting speeding tickets on diagnols 
-        if ((view_velocity[0] != 0) && (view_velocity[1] != 0)){
-            view_velocity[0] = view_velocity[0]*0.5; 
-            view_velocity[1] = view_velocity[1]*0.5;
+        if (sprites[0].velocity[0] != 0 && sprites[0].velocity[1] != 0){
+            if ((sprites[0].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[0].velocity[1] == velocity || sprites[0].velocity[1] == -velocity)){
+                sprites[0].velocity[0] = sprites[0].velocity[0]*0.5; 
+                sprites[0].velocity[1] = sprites[0].velocity[1]*0.5;
+            }   
         }
         
         // Draw each of the background layers with the correct position
@@ -260,7 +262,7 @@ int main(){
                 sprites[i].last_update_time[a] = SDL_GetTicks();
             }
             SDL_Rect dest = {sprites[i].position[0],sprites[i].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
-            SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 135, NULL, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
         }
         
         // Show the completed frame and wait for vsync
