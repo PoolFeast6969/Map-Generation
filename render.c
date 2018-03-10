@@ -187,19 +187,19 @@ int main(){
                     switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
                             view_velocity[0] = velocity;
-                            sprites[0].velocity[1] = -velocity;
+                            sprites[0].velocity[0] = -velocity;
                             break;
                         case SDLK_RIGHT:
                             view_velocity[0] = -velocity;
-                            sprites[0].velocity[1] = velocity;
+                            sprites[0].velocity[0] = velocity;
                             break;
                         case SDLK_UP:
                             view_velocity[1] = velocity;
-                            sprites[0].velocity[0] = -velocity;
+                            sprites[0].velocity[1] = -velocity;
                             break;
                         case SDLK_DOWN:
                             view_velocity[1] = -velocity;
-                            sprites[0].velocity[0] = velocity;
+                            sprites[0].velocity[1] = velocity;
                             break;
                         default:
                             break;
@@ -210,19 +210,19 @@ int main(){
                     switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
                             view_velocity[0] = 0;
-                            sprites[0].velocity[1] = 0;
+                            sprites[0].velocity[0] = 0;
                             break;
                         case SDLK_RIGHT:
                             view_velocity[0] = 0;
-                            sprites[0].velocity[1] = 0;
+                            sprites[0].velocity[0] = 0;
                             break;
                         case SDLK_UP:
                             view_velocity[1] = 0;
-                            sprites[0].velocity[0] = 0;
+                            sprites[0].velocity[1] = 0;
                             break;
                         case SDLK_DOWN:
                             view_velocity[1] = 0;
-                            sprites[0].velocity[0] = 0;
+                            sprites[0].velocity[1] = 0;
                             break;
                         default:
                             break;
