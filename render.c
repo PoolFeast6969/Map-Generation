@@ -22,7 +22,7 @@ int main(){
     // Terrain Heights Generation
     //
 
-    size_t terrain_size = 1000;
+    size_t terrain_size = 500;
 
     // Make array for the terrain generator to fill
     float (*height)[terrain_size][terrain_size];
@@ -164,7 +164,7 @@ int main(){
     //
     
     // yep all these pixels are the same size
-    double pixel_scaling = 2;
+    double pixel_scaling = 5;
 
     double view_velocity[] = {0,0};
     SDL_Event window_event;
@@ -173,6 +173,10 @@ int main(){
 
     bool run = true;
     int velocity = 1;
+    int left_speed = 0; 
+    int right_speed = 0; 
+    int up_speed = 0; 
+    int down_speed = 0; 
 
     // Main loop that updates at vsync in case we ever need animations
     while (run) {
@@ -186,22 +190,18 @@ int main(){
                     // Check the SDLKey values and move change the coords
                     switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
-                            view_velocity[0] = velocity;
-                            sprites[0].velocity[0] = -velocity;
-                            break;
+                            left_speed = velocity;
+                            break; 
                         case SDLK_RIGHT:
-                            view_velocity[0] = -velocity;
-                            sprites[0].velocity[0] = velocity;
-                            break;
+                            right_speed = velocity;
+                            break; 
                         case SDLK_UP:
-                            view_velocity[1] = velocity;
-                            sprites[0].velocity[1] = -velocity;
-                            break;
+                            up_speed = velocity;
+                            break; 
                         case SDLK_DOWN:
-                            view_velocity[1] = -velocity;
-                            sprites[0].velocity[1] = velocity;
-                            break;
-                        default:
+                            down_speed = velocity;
+                            break; 
+                        default:    
                             break;
                     }
                     break;
@@ -209,27 +209,28 @@ int main(){
                     // Check the SDLKey values and move change the coords
                     switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
-                            view_velocity[0] = 0;
-                            sprites[0].velocity[0] = 0;
+                            left_speed = 0;
                             break;
                         case SDLK_RIGHT:
-                            view_velocity[0] = 0;
-                            sprites[0].velocity[0] = 0;
+                            right_speed = 0;
                             break;
                         case SDLK_UP:
-                            view_velocity[1] = 0;
-                            sprites[0].velocity[1] = 0;
+                            up_speed = 0;
                             break;
                         case SDLK_DOWN:
-                            view_velocity[1] = 0;
-                            sprites[0].velocity[1] = 0;
+                            down_speed = 0;
                             break;
-                        default:
+                        default:    
                             break;
                     }
                     break;
             }
         }
+
+        sprites[0].velocity[0] = right_speed - left_speed;
+        sprites[0].velocity[1] = down_speed - up_speed; 
+
+        view_velocity[1] = 1;
 
         //Stop you from getting speeding tickets on diagnols 
         if (sprites[0].velocity[0] != 0 && sprites[0].velocity[1] != 0){
