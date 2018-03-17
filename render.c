@@ -153,8 +153,8 @@ int main(){
         // Create texture
         sprites[i].texture = SDL_CreateTextureFromSurface(renderer, sprites[i].surface);
         // Delete surface or something
-        sprites[i].position[1] = 0;
-        sprites[i].position[0] = 0;
+        sprites[i].position[1] = 50;
+        sprites[i].position[0] = 50;
         sprites[i].velocity[0] = 0;
         sprites[i].velocity[1] = 0;
     }
@@ -163,7 +163,7 @@ int main(){
     // Loop
     //
     
-    // yep all these pixels are the same size
+    // yep all these pixels ae the same size
     double pixel_scaling = 5;
 
     double view_velocity[] = {0,0};
@@ -226,11 +226,11 @@ int main(){
                     break;
             }
         }
-
+        
         sprites[0].velocity[0] = right_speed - left_speed;
         sprites[0].velocity[1] = down_speed - up_speed; 
 
-        view_velocity[1] = 1;
+        view_velocity[1] = 10;
 
         //Stop you from getting speeding tickets on diagnols 
         if (sprites[0].velocity[0] != 0 && sprites[0].velocity[1] != 0){
@@ -239,7 +239,15 @@ int main(){
                 sprites[0].velocity[1] = sprites[0].velocity[1]*0.5;
             }   
         }
-        
+
+        //Stop you leaving the map 
+        //if (sprites[0].position[0] <= 0){
+        //    sprites[0].position[0] = 0; 
+        //    if (sprites[0].velocity[0] < 0){
+        //        sprites[0].velocity[0] = 0;
+        //    }                  
+        //}        
+
         // Draw each of the background layers with the correct position
         for (int i = 0; i < background_layer_amount; i++) {
             // Determine if it needs to be have its position changed
