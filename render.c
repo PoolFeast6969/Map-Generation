@@ -17,6 +17,8 @@ int main(){
     SDL_Window *window = SDL_CreateWindow("planes but with less detail",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,1000,1000,SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     SDL_Renderer *renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+    
 
     //
     // Terrain Heights Generation
@@ -248,6 +250,7 @@ int main(){
         //    }                  
         //}        
 
+
         // Draw each of the background layers with the correct position
         for (int i = 0; i < background_layer_amount; i++) {
             // Determine if it needs to be have its position changed
@@ -276,6 +279,8 @@ int main(){
         
         // Show the completed frame and wait for vsync
         SDL_RenderPresent(renderer);
+        SDL_RenderClear(renderer);
+
     }
     
     //
