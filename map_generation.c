@@ -57,14 +57,12 @@ double noise(double x, double y, double z) {
 int generate_terrain (size_t size, int x_offset, int y_offset, float(**z)[size][size]) {
     // Allocating memery for the matrix which will store the altitudes
     (*z) = malloc(sizeof(**z));
-
     // Fill array
     int x,y;
     for(x = 0; x < size; x++) {
         for(y = 0; y < size; y++) {
-            (**z)[x][y] = noise((x + x_offset)/10,(y + y_offset)/10,1);
+            (**z)[x][y] = noise((x + x_offset)/(double)size,(y + y_offset)/(double)size,7);
         }
     }
-
     return 0;
 }

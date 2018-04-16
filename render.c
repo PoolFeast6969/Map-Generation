@@ -24,7 +24,7 @@ int main(){
     // Terrain Heights Generation
     //
 
-    size_t terrain_size = 500;
+    size_t terrain_size = 100;
 
     // Make array for the terrain generator to fill
     float (*height)[terrain_size][terrain_size];
