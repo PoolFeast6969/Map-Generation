@@ -1,6 +1,6 @@
 SOURCES=map_generation.c render.c
 DEBUG=-g
-LIBS=-lSDL2
+LIBS=-lSDL2 -lm
 CFLAGS=-Wall -pedantic $(DEBUG)
 OBJECTS=map_generation.o render.o
 CC=gcc
