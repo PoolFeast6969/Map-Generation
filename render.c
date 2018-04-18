@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (size_t size, int x_offset, int y_offset, float(**z)[size][size]);
+int generate_terrain (size_t size, double scaling, int x_offset, int y_offset, int z_layer,float(**z)[size][size]);
 
 int main(){
     //
@@ -24,12 +24,12 @@ int main(){
     // Terrain Heights Generation
     //
 
-    size_t terrain_size = 100;
+    size_t terrain_size = 300;
 
     // Make array for the terrain generator to fill
     float (*height)[terrain_size][terrain_size];
     // Run terrain generation
-    generate_terrain(terrain_size, 0.0, 0.0, &height);
+    generate_terrain(terrain_size, 20, 0.0, 0.0, 1,&height);
 
     //
     // Background
@@ -49,31 +49,12 @@ int main(){
     Uint32 pixel_format_id = SDL_PIXELFORMAT_RGBA32; // A 32 bit format that lets the OS decide specifics
     SDL_PixelFormat *pixel_format = SDL_AllocFormat(pixel_format_id); // Get the actual format object from its ID
     
-    // Convert height map to pixel color map
-    Uint32 land_pixels[terrain_size][terrain_size]; // Create the array to store the pixels
-    for(int columns=0; columns < terrain_size; columns++) {
-        for(int rows=0; rows < terrain_size; rows++) {
-            if ((*height)[columns][rows] <= 7) {
-                // Draw Water
-                int blueness = (*height)[columns][rows]/7 * 120+ 50;
-                land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 50, 120*((*height)[columns][rows]/7), blueness, 255);
-            } else if ((*height)[columns][rows] > 7) {
-                // Draw Forest
-                int greenness = ((*height)[columns][rows]-7)/8 * 130+ 95;
-                land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 0, greenness, 0, 255);
-            }
-        }
-    }
-    
-    // Put the land image into a texture
-    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint32), pixel_format_id); // Through a surface
-    SDL_Texture *land_texture = SDL_CreateTextureFromSurface(renderer,land_surface);
     
     // Instantiate the land layer struct
     struct background_layer land = {
         .distance = 500,
-        .texture = SDL_CreateTextureFromSurface(renderer,land_surface),
-        .pixels = *land_pixels
+        .texture = 0,
+        .pixels = 0
     };
     
     // Creates an array of cloud layers with their height and density already set, and the land already in the background
@@ -84,7 +65,7 @@ int main(){
     // Convert height map to clouds
     for (int i = 1; i < background_layer_amount; i++) {
         // Run terrain generation
-        generate_terrain(terrain_size, 0.0 + terrain_size, 0.0, &height);        // Create a cloud pixel map from the height map provided
+        generate_terrain(terrain_size, 1.5 ,0.0 + terrain_size, 0.0,1, &height);        // Create a cloud pixel map from the height map provided
         Uint32 pixels[terrain_size][terrain_size];
         for(int columns=0; columns < terrain_size; columns++) {
             for(int rows=0; rows < terrain_size; rows++) {
@@ -179,6 +160,9 @@ int main(){
     int up_speed = 0; 
     int down_speed = 0; 
 
+    double z_layer = 10;
+    printf("%i",z_layer);
+
     // Main loop that updates at vsync in case we ever need animations
     while (run) {
         while (SDL_PollEvent(&window_event)){
@@ -231,8 +215,6 @@ int main(){
         sprites[0].velocity[0] = right_speed - left_speed;
         sprites[0].velocity[1] = down_speed - up_speed; 
 
-        view_velocity[1] = 10;
-
         //Stop you from getting speeding tickets on diagnols 
         if (sprites[0].velocity[0] != 0 && sprites[0].velocity[1] != 0){
             if ((sprites[0].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[0].velocity[1] == velocity || sprites[0].velocity[1] == -velocity)){
@@ -249,6 +231,29 @@ int main(){
         //    }                  
         //}        
 
+        generate_terrain(terrain_size, 20, 0.0, 0.0,z_layer, &height);
+        z_layer = z_layer + 100;
+        // Convert height map to pixel color map
+        Uint32 land_pixels[terrain_size][terrain_size]; // Create the array to store the pixels
+        for(int columns=0; columns < terrain_size; columns++) {
+            for(int rows=0; rows < terrain_size; rows++) {
+                if ((*height)[columns][rows] <= 0.5) {
+                    // Draw Water
+                    int blueness = (*height)[columns][rows] * 120+ 50;
+                    land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 50, 120*((*height)[columns][rows]/7), blueness, 255);
+                } else if ((*height)[columns][rows] > 0.5) {
+                    // Draw Forest
+                    int greenness = ((*height)[columns][rows]-0.5) * 130+ 95;
+                    land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 0, greenness, 0, 255);
+                }
+            }
+        }
+            
+        // Put the land image into a texture
+        SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint32), pixel_format_id); // Through a surface
+        SDL_Texture *land_texture = SDL_CreateTextureFromSurface(renderer,land_surface);
+
+        background_layers[0].texture = SDL_CreateTextureFromSurface(renderer,land_surface);
 
         // Draw each of the background layers with the correct position
         for (int i = 0; i < background_layer_amount; i++) {
@@ -287,7 +292,6 @@ int main(){
     //
     
     // Destroy things
-    SDL_DestroyTexture(land_texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     //Quit SDL
