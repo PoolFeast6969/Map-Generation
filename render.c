@@ -23,7 +23,7 @@ int main(){
     // Terrain Heights Generation
     //
 
-    size_t terrain_size = 300;
+    size_t terrain_size = 100;
 
     // Make array for the terrain generator to fill
     float (*height)[terrain_size][terrain_size];
@@ -145,7 +145,7 @@ int main(){
     //
     
     // yep all these pixels ae the same size
-    double pixel_scaling = 5;
+    double pixel_scaling = 10;
 
     double view_velocity[] = {0,0};
     SDL_Event window_event;
@@ -228,8 +228,8 @@ int main(){
         //    }                  
         //}        
 
-        generate_terrain(terrain_size, 20.0, z_layer, &height);
-        z_layer = z_layer + .02;
+        generate_terrain(terrain_size, 4.0, z_layer, &height);
+        z_layer = z_layer + .01;
         // Convert height map to pixel color map
         Uint32 land_pixels[terrain_size][terrain_size]; // Create the array to store the pixels
         for(int columns=0; columns < terrain_size; columns++) {
