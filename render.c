@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (size_t size, double scaling, int x_offset, int y_offset, int z_layer,float(**z)[size][size]);
+int generate_terrain (size_t size, double scaling, double z_layer, float(**z)[size][size]);
 
 int main(){
     //
@@ -19,7 +19,6 @@ int main(){
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
     
-
     //
     // Terrain Heights Generation
     //
@@ -29,7 +28,7 @@ int main(){
     // Make array for the terrain generator to fill
     float (*height)[terrain_size][terrain_size];
     // Run terrain generation
-    generate_terrain(terrain_size, 20, 0.0, 0.0, 1,&height);
+    generate_terrain(terrain_size, 20, 1,&height);
 
     //
     // Background
@@ -65,7 +64,7 @@ int main(){
     // Convert height map to clouds
     for (int i = 1; i < background_layer_amount; i++) {
         // Run terrain generation
-        generate_terrain(terrain_size, 1.5 ,0.0 + terrain_size, 0.0,1, &height);        // Create a cloud pixel map from the height map provided
+        generate_terrain(terrain_size, 1.5 ,1, &height);        // Create a cloud pixel map from the height map provided
         Uint32 pixels[terrain_size][terrain_size];
         for(int columns=0; columns < terrain_size; columns++) {
             for(int rows=0; rows < terrain_size; rows++) {
@@ -161,8 +160,6 @@ int main(){
     int down_speed = 0; 
 
     double z_layer = 10;
-    printf("%i",z_layer);
-
     // Main loop that updates at vsync in case we ever need animations
     while (run) {
         while (SDL_PollEvent(&window_event)){
@@ -231,8 +228,8 @@ int main(){
         //    }                  
         //}        
 
-        generate_terrain(terrain_size, 20, 0.0, 0.0,z_layer, &height);
-        z_layer = z_layer + 100;
+        generate_terrain(terrain_size, 20.0, z_layer, &height);
+        z_layer = z_layer + .02;
         // Convert height map to pixel color map
         Uint32 land_pixels[terrain_size][terrain_size]; // Create the array to store the pixels
         for(int columns=0; columns < terrain_size; columns++) {

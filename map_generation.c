@@ -39,9 +39,12 @@ double noise(double x, double y, double z) {
     }
     
     int X = (int)floor(x) & 255, Y = (int)floor(y) & 255, Z = (int)floor(z) & 255;
+    // Find unit grid cell containing point 
+    // Get relative xyz coordinates of point within that cell 
     x -= floor(x);                                
     y -= floor(y);                                
     z -= floor(z);
+
     double u = fade(x), v = fade(y), w = fade(z);
     int A = p[X  ]+Y, AA = p[A]+Z, AB = p[A+1]+Z, B = p[X+1]+Y, BA = p[B]+Z, BB = p[B+1]+Z;  
     return lerp(w, lerp(v, lerp(u, grad(p[AA  ], x  , y  , z   ), 
@@ -54,15 +57,18 @@ double noise(double x, double y, double z) {
                                     grad(p[BB+1], x-1, y-1, z-1 ))));
 }
 
-int generate_terrain (size_t size, double scaling, int x_offset, int y_offset, int z_layer,float(**z)[size][size]) {
+int generate_terrain (size_t size, double scaling, double z_layer, float(**z)[size][size]) {
     // Allocating memery for the matrix which will store the altitudes
     (*z) = malloc(sizeof(**z));
     // Fill array
     int x,y;
     for(x = 0; x < size; x++) {
+        float x_noise = x/(float)size*scaling;
         for(y = 0; y < size; y++) {
-            (**z)[x][y] = (0.15+noise((x + x_offset)/scaling,(y + y_offset)/scaling,z_layer))/0.3;
+            float y_noise = y/(float)size*scaling;
+            (**z)[x][y] = noise(x_noise,y_noise,z_layer);
         }
     }
+
     return 0;
 }
