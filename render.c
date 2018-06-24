@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (size_t size, double scaling, double z_layer, float(**z)[size][size]);
+int generate_terrain (int size, float scaling, float z_layer, float **height);
 
 int main(){
     //
@@ -23,12 +23,19 @@ int main(){
     // Terrain Heights Generation
     //
 
-    size_t terrain_size = 100;
+    int terrain_size = 100;
 
-    // Make array for the terrain generator to fill
-    float (*height)[terrain_size][terrain_size];
+    // Make array for the terrain generator to fill (a texture i guess)
+    // Allocating memery for the matrix which will store the altitudes
+    // Allocate the first dimension as an array of float pointers
+    float **height = malloc(sizeof(float*)*terrain_size);
+    // Allocate the second dimension as an array of actual floats
+    for (int i=0; i<terrain_size; i++) {
+        height[i] = malloc(sizeof(float)*terrain_size);
+    }
+
     // Run terrain generation
-    generate_terrain(terrain_size, 20, 1,&height);
+    generate_terrain(terrain_size, 4.0, 1.0, height);
 
     //
     // Background
@@ -64,16 +71,16 @@ int main(){
     // Convert height map to clouds
     for (int i = 1; i < background_layer_amount; i++) {
         // Run terrain generation
-        generate_terrain(terrain_size, 1.5 ,1, &height);        // Create a cloud pixel map from the height map provided
+        generate_terrain(terrain_size, 1.5 ,1, height);        // Create a cloud pixel map from the height map provided
         Uint32 pixels[terrain_size][terrain_size];
         for(int columns=0; columns < terrain_size; columns++) {
             for(int rows=0; rows < terrain_size; rows++) {
-                if ((*height)[columns][rows] < background_layers[i].density) {
+                if ((height)[columns][rows] < background_layers[i].density) {
                     // Draw Transparent
                     pixels[columns][rows] = SDL_MapRGBA(pixel_format, 0, 0, 0, 0);
-                } else if (background_layers[i].density <= (*height)[columns][rows]){
+                } else if (background_layers[i].density <= height[columns][rows]){
                     // Draw Greyscale
-                    int greyness = (1-((*height)[columns][rows]-background_layers[i].density)/16) * 225 + 30;
+                    int greyness = (1-(height[columns][rows]-background_layers[i].density)/16) * 225 + 30;
                     pixels[columns][rows] = SDL_MapRGBA(pixel_format, greyness, greyness, greyness, 255);
                 }
             }
@@ -228,19 +235,19 @@ int main(){
         //    }                  
         //}        
 
-        generate_terrain(terrain_size, 4.0, z_layer, &height);
+        generate_terrain(terrain_size, 4.0, z_layer, height);
         z_layer = z_layer + .01;
         // Convert height map to pixel color map
         Uint32 land_pixels[terrain_size][terrain_size]; // Create the array to store the pixels
         for(int columns=0; columns < terrain_size; columns++) {
             for(int rows=0; rows < terrain_size; rows++) {
-                if ((*height)[columns][rows] <= 0.5) {
+                if (height[columns][rows] <= 0.5) {
                     // Draw Water
-                    int blueness = (*height)[columns][rows] * 120+ 50;
-                    land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 50, 120*((*height)[columns][rows]/7), blueness, 255);
-                } else if ((*height)[columns][rows] > 0.5) {
+                    int blueness = height[columns][rows] * 120+ 50;
+                    land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 50, 120*(height[columns][rows]/7), blueness, 255);
+                } else if (height[columns][rows] > 0.5) {
                     // Draw Forest
-                    int greenness = ((*height)[columns][rows]-0.5) * 130+ 95;
+                    int greenness = (height[columns][rows]-0.5) * 130+ 95;
                     land_pixels[columns][rows] = SDL_MapRGBA(pixel_format, 0, greenness, 0, 255);
                 }
             }
@@ -287,7 +294,7 @@ int main(){
     //
     // Clean Up
     //
-    
+    free(height);    
     // Destroy things
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

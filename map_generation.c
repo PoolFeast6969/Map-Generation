@@ -57,18 +57,14 @@ double noise(double x, double y, double z) {
                                     grad(p[BB+1], x-1, y-1, z-1 ))));
 }
 
-int generate_terrain (size_t size, double scaling, double z_layer, float(**z)[size][size]) {
-    // Allocating memery for the matrix which will store the altitudes
-    (*z) = malloc(sizeof(**z));
+int generate_terrain (int size, float scaling, float z_layer, float **z) {
     // Fill array
-    int x,y;
-    for(x = 0; x < size; x++) {
+    for(int x = 0; x < size; x++) {
         float x_noise = x/(float)size*scaling;
-        for(y = 0; y < size; y++) {
+        for(int y = 0; y < size; y++) {
             float y_noise = y/(float)size*scaling;
-            (**z)[x][y] = noise(x_noise,y_noise,z_layer);
+            z[x][y] = noise(x_noise,y_noise,z_layer);
         }
     }
-
     return 0;
 }
