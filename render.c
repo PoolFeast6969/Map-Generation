@@ -26,10 +26,10 @@ int main(){
     int terrain_size = 100;
 
     // Make array for the terrain generator to fill (a texture i guess)
-    // Allocating memery for the matrix which will store the altitudes
+    // Allocating memory for the matrix which will store the altitudes
     // Allocate the first dimension as an array of float pointers
     float **height = malloc(sizeof(float*)*terrain_size);
-    // Allocate the second dimension as an array of actual floats
+    // Allocate each float pointer as an array of actual floats
     for (int i=0; i<terrain_size; i++) {
         height[i] = malloc(sizeof(float)*terrain_size);
     }
@@ -287,6 +287,7 @@ int main(){
         
         // Show the completed frame and wait for vsync
         SDL_RenderPresent(renderer);
+        SDL_DestroyTexture(background_layers[0].texture);
         SDL_RenderClear(renderer);
 
     }
