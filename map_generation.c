@@ -63,7 +63,7 @@ int generate_terrain (int size, float scaling, float z_layer, float **z) {
         float x_noise = x/(float)size*scaling;
         for(int y = 0; y < size; y++) {
             float y_noise = y/(float)size*scaling;
-            z[x][y] = noise(x_noise,y_noise,z_layer);
+            z[x][y] = noise(x_noise,y_noise,z_layer);     
         }
     }
     return 0;
