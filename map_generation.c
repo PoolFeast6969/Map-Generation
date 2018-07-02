@@ -57,14 +57,21 @@ double noise(double x, double y, double z) {
                                     grad(p[BB+1], x-1, y-1, z-1 ))));
 }
 
-int generate_terrain (int size, float scaling, float z_layer, float **z) {
+int generate_terrain (int size, float z_layer, float **z) {
+    // Scaling Factors 
+    float scaling[] = {1}; // 4.5, 5, 5.5, 6, 6.5, 7, 7.5};
+
     // Fill array
     for(int x = 0; x < size; x++) {
-        float x_noise = x/(float)size*scaling;
+        float x_noise = x/(float)size*4;
         for(int y = 0; y < size; y++) {
-            float y_noise = y/(float)size*scaling;
-            z[x][y] = noise(x_noise,y_noise,z_layer);
+            float y_noise = y/(float)size*4;
+            //Adding Altitudes for different frequencies 
+            for(int i = 0; i < 1; i++) {
+                z[x][y] += noise(x_noise*scaling[i],y_noise*scaling[i],z_layer);//scaling[i];    
+            }        
         }
     }
     return 0;
 }
+
