@@ -59,17 +59,20 @@ double noise(double x, double y, double z) {
 
 int generate_terrain (int size, float z_layer, float **z) {
     // Scaling Factors 
-    float scaling[] = {4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5};
+    float scaling[] = {0.01, 0.1, 0.25, 0.5, 1, 1.5, 2, 2.5};
+    int octaves = 8;
 
     // Fill array
     for(int x = 0; x < size; x++) {
-        float x_noise = x/(float)size;
+        float x_noise = x/(float)size*4;
         for(int y = 0; y < size; y++) {
-            float y_noise = y/(float)size;
+            float y_noise = y/(float)size*4;
             //Adding Altitudes for different frequencies 
-            for(int i = 0; i < 8; i++) {
-                z[x][y] += noise(x_noise*scaling[i],y_noise*scaling[i],z_layer)/scaling[i]; 
-            }        
+            double height = 0;
+            for(int i = 0; i < octaves; i++) {
+                height += noise(x_noise*scaling[i]+pow(1 + scaling[i], 1.5), y_noise*scaling[i]+pow(1 + scaling[i], 1.5),z_layer)/pow(1 + scaling[i], 0.25);   
+            }  
+            z[x][y] = height;      
         }
     }
     return 0;
