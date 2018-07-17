@@ -59,7 +59,7 @@ double noise(double x, double y, double z) {
 
 int generate_terrain (int size, float z_layer, float **z) {
     // Scaling Factors 
-    float scaling[] = {0.01, 0.1, 0.25, 0.5, 1, 1.5, 2, 2.5};
+    float scaling[] = {0.01, 0.15, 0.25, 0.5, 1, 1.5, 2, 2.5};
     int octaves = 8;
 
     // Fill array
@@ -72,8 +72,7 @@ int generate_terrain (int size, float z_layer, float **z) {
             for(int i = 0; i < octaves; i++) {
                 height += noise(x_noise*scaling[i]+pow(1 + scaling[i], 1.5), y_noise*scaling[i]+pow(1 + scaling[i], 1.5),z_layer)/pow(1 + scaling[i], 0.25);   
             }  
-            z[x][y] = height;      
-        }
+            z[x][y] = height;        }
     }
     return 0;
 }

@@ -65,15 +65,15 @@ int main(){
 
     struct terrain_layer biome[] = {
         {
-            .start_color = {50,120,255}, // Deep water
-            .end_color = {200,200,255}, // Shallow water
-            .start_height = -1, // Minimum value
+            .start_color = {50,75,255}, // Deep water
+            .end_color = {150,150,255}, // Shallow water
+            .start_height = -3, // Minimum value
             .end_height = 0, // Minimum value
         },{
             .start_color = {0,130,0}, // low land
             .end_color = {0,225,0}, // high land
             .start_height = 0, // Minimum value       
-            .end_height = 1, // halfway         
+            .end_height = 3, // halfway         
         }
     };
 
@@ -88,7 +88,7 @@ int main(){
                 if (biome[layer].start_height <= height[y][x] && biome[layer].end_height >= height[y][x]) { // the layer of interest
                     float pixel_color[3]; 
                     for(int color=0; color < 2; color++) {
-                        pixel_color[color] = biome[layer].end_color[color] + (biome[layer].start_color[color] - biome[layer].end_color[color]) * (biome[layer].start_height - biome[layer].end_height) * height[x][y];
+                        pixel_color[color] = biome[layer].end_color[color] + ((biome[layer].start_color[color] - biome[layer].end_color[color])*(height[x][y]-biome[layer].start_height))/(biome[layer].start_height - biome[layer].end_height);
                     }
                     land_pixels[x][y] = SDL_MapRGB(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2]);
                 }
