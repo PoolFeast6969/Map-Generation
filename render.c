@@ -29,7 +29,7 @@ int main(){
     // Terrain Heights Array
     //
 
-    int terrain_size = 100;
+    const int terrain_size = 100;
 
     // Make array for the terrain generator to fill (a texture i guess)
     // Allocating memory for the matrix which will store the altitudes
@@ -88,7 +88,7 @@ int main(){
                 if (biome[layer].start_height <= height[x][y] && biome[layer].end_height >= height[x][y]) { // the layer of interest
                     float pixel_color[3]; 
                     for(int color=0; color <= 2; color++) {
-                        // adjust the height values to fit inside thingo
+                        // linearly interpolate between the two end colors
                         pixel_color[color] = biome[layer].start_color[color] + ((biome[layer].start_color[color] - biome[layer].end_color[color])*(height[x][y]-biome[layer].start_height))/(biome[layer].start_height - biome[layer].end_height);
                     }
                     land_pixels[x][y] = SDL_MapRGB(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2]);
@@ -109,7 +109,7 @@ int main(){
     SDL_FreeSurface(land_surface);
 
     // Creates an array of cloud layers with their height and density already set, and the land already in the background
-    struct background_layer background_layers[] = {land};
+    struct background_layer background_layers[] = {land,{400,1,{-15,25}},{340,2,{-15,25}},{100, 3,{-25,35}}};
     
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
     printf("There are %i background layer(s)\n",background_layer_amount);
