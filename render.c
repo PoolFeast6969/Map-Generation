@@ -65,15 +65,15 @@ int main(){
 
     struct terrain_layer biome[] = {
         {
-            .start_color = {50,75,255}, // Deep water
-            .end_color = {150,150,255}, // Shallow water
+            .start_color = {36,36,85}, // Deep water
+            .end_color = {36,109,170}, // Shallow water
             .start_height = -3, // Minimum value
             .end_height = 0, // Minimum value
         },{
-            .start_color = {0,130,0}, // low land
-            .end_color = {0,225,0}, // high land
-            .start_height = 0, // Minimum value       
-            .end_height = 3, // halfway         
+            .start_color = {0,109,0}, // low land
+            .end_color = {0,218,0}, // high land
+            .start_height = 0, // Minimum value
+            .end_height = 2, // halfway
         }
     };
 
@@ -85,10 +85,11 @@ int main(){
     for(int x=0; x < terrain_size; x++) {
         for(int y=0; y < terrain_size; y++) {
             for(int layer=0; layer < terrain_layer_amount; layer++) {
-                if (biome[layer].start_height <= height[y][x] && biome[layer].end_height >= height[y][x]) { // the layer of interest
+                if (biome[layer].start_height <= height[x][y] && biome[layer].end_height >= height[x][y]) { // the layer of interest
                     float pixel_color[3]; 
-                    for(int color=0; color < 2; color++) {
-                        pixel_color[color] = biome[layer].end_color[color] + ((biome[layer].start_color[color] - biome[layer].end_color[color])*(height[x][y]-biome[layer].start_height))/(biome[layer].start_height - biome[layer].end_height);
+                    for(int color=0; color <= 2; color++) {
+                        // adjust the height values to fit inside thingo
+                        pixel_color[color] = biome[layer].start_color[color] + ((biome[layer].start_color[color] - biome[layer].end_color[color])*(height[x][y]-biome[layer].start_height))/(biome[layer].start_height - biome[layer].end_height);
                     }
                     land_pixels[x][y] = SDL_MapRGB(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2]);
                 }
@@ -108,7 +109,7 @@ int main(){
     SDL_FreeSurface(land_surface);
 
     // Creates an array of cloud layers with their height and density already set, and the land already in the background
-    struct background_layer background_layers[] = {land,{400,8,{-15,25}},{340,8,{-15,25}},{100, 12,{-25,35}}};
+    struct background_layer background_layers[] = {land};
     
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
     printf("There are %i background layer(s)\n",background_layer_amount);
