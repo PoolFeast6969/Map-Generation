@@ -7,6 +7,42 @@
 
 // The compliler needs to know that this function exists before it calls it, or something like that
 int generate_terrain (int size, float scaling, float z_layer, float **height);
+    
+struct background_layer {
+    int distance; // Distance from view
+    double density; // Cloud thickness
+    int shadow_offset[2];
+    double position[2];
+    double last_update_time[2]; // When each position was last updated
+    SDL_Texture* texture; // Texture in video memory
+    Uint32 *pixels; // Pixel data in normal memory
+};
+
+struct terrain_layer {
+    int start_color[4];
+    int end_color[4];
+    float end_height;
+    float start_height;
+};
+
+int generate_biome_pixels(Uint32 *pixels, int pixel_amount, struct terrain_layer biome[], int terrain_layer_amount, float **height, SDL_PixelFormat *pixel_format) {
+    // Convert height map to pixel color map
+    for(int x=0; x < pixel_amount; x++) {
+        for(int y=0; y < pixel_amount; y++) {
+            for(int layer=0; layer < terrain_layer_amount; layer++) {
+                if (biome[layer].start_height <= height[x][y] && biome[layer].end_height >= height[x][y]) { // the layer of interest
+                    float pixel_color[4]; 
+                    for(int color=0; color <= 3; color++) {
+                        // linearly interpolate between the two end colors
+                        pixel_color[color] = biome[layer].start_color[color] + ((biome[layer].start_color[color] - biome[layer].end_color[color])*(height[x][y]-biome[layer].start_height))/(biome[layer].start_height - biome[layer].end_height);
+                    }
+                    pixels[x + y*pixel_amount] = SDL_MapRGBA(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2],pixel_color[3]);
+                }
+            }
+        }
+    }
+    return 0;
+}
 
 int main(){
     //
@@ -45,33 +81,16 @@ int main(){
     //
     // Background
     //
-    
-    struct background_layer {
-        int distance; // Distance from view
-        double density; // Cloud thickness
-        int shadow_offset[2];
-        double position[2];
-        double last_update_time[2]; // When each position was last updated
-        SDL_Texture* texture; // Texture in video memory
-        Uint32 *pixels; // Pixel data in normal memory
-    };
-    
-    struct terrain_layer {
-        int start_color[3];
-        int end_color[3];
-        float end_height;
-        float start_height;
-    };
 
     struct terrain_layer biome[] = {
         {
-            .start_color = {36,36,85}, // Deep water
-            .end_color = {36,109,170}, // Shallow water
+            .start_color = {36,36,85,255}, // Deep water
+            .end_color = {36,109,170,255}, // Shallow water
             .start_height = -3, // Minimum value
             .end_height = 0, // Minimum value
         },{
-            .start_color = {0,109,0}, // low land
-            .end_color = {0,218,0}, // high land
+            .start_color = {0,109,0,255}, // low land
+            .end_color = {0,218,0,255}, // high land
             .start_height = 0, // Minimum value
             .end_height = 2, // halfway
         }
@@ -80,25 +99,11 @@ int main(){
     int terrain_layer_amount = sizeof(biome) / sizeof(struct terrain_layer);
     printf("There are %i terrain layer(s)\n",terrain_layer_amount);
 
-    // Convert height map to pixel color map
-    Uint32 land_pixels[terrain_size][terrain_size]; // Create the array to store the pixels
-    for(int x=0; x < terrain_size; x++) {
-        for(int y=0; y < terrain_size; y++) {
-            for(int layer=0; layer < terrain_layer_amount; layer++) {
-                if (biome[layer].start_height <= height[x][y] && biome[layer].end_height >= height[x][y]) { // the layer of interest
-                    float pixel_color[3]; 
-                    for(int color=0; color <= 2; color++) {
-                        // linearly interpolate between the two end colors
-                        pixel_color[color] = biome[layer].start_color[color] + ((biome[layer].start_color[color] - biome[layer].end_color[color])*(height[x][y]-biome[layer].start_height))/(biome[layer].start_height - biome[layer].end_height);
-                    }
-                    land_pixels[x][y] = SDL_MapRGB(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2]);
-                }
-            }
-        }
-    }
-            
+    Uint32 *land_pixels = malloc(sizeof(Uint32)*terrain_size*terrain_size);
+    generate_biome_pixels(land_pixels, terrain_size, biome, terrain_layer_amount, height, pixel_format);
+
     // Put the land image into a texture
-    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint32), pixel_format_id); // Through a surface 
+    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 32,terrain_size * sizeof(Uint32), pixel_format_id); // Through a surface 
 
     // Instantiate the land layer struct
     struct background_layer land = {
