@@ -25,19 +25,17 @@ struct terrain_layer {
     float start_height;
 };
 
-int generate_biome_pixels(Uint32 *pixels, int pixel_amount, struct terrain_layer biome[], int terrain_layer_amount, float **height, SDL_PixelFormat *pixel_format) {
+int generate_terrain_pixels(Uint32 *pixels, int pixel_amount, struct terrain_layer layer, float **height, SDL_PixelFormat *pixel_format) {
     // Convert height map to pixel color map
     for(int x=0; x < pixel_amount; x++) {
         for(int y=0; y < pixel_amount; y++) {
-            for(int layer=0; layer < terrain_layer_amount; layer++) {
-                if (biome[layer].start_height <= height[x][y] && biome[layer].end_height >= height[x][y]) { // the layer of interest
+                if (layer.start_height <= height[x][y] && layer.end_height >= height[x][y]) { // the layer of interest
                     float pixel_color[4]; 
                     for(int color=0; color <= 3; color++) {
                         // linearly interpolate between the two end colors
-                        pixel_color[color] = biome[layer].start_color[color] + ((biome[layer].start_color[color] - biome[layer].end_color[color])*(height[x][y]-biome[layer].start_height))/(biome[layer].start_height - biome[layer].end_height);
+                        pixel_color[color] = layer.start_color[color] + ((layer.start_color[color] - layer.end_color[color])*(height[x][y]-layer.start_height))/(layer.start_height - layer.end_height);
                     }
                     pixels[x + y*pixel_amount] = SDL_MapRGBA(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2],pixel_color[3]);
-                }
             }
         }
     }
@@ -96,11 +94,10 @@ int main(){
         }
     };
 
-    int terrain_layer_amount = sizeof(biome) / sizeof(struct terrain_layer);
-    printf("There are %i terrain layer(s)\n",terrain_layer_amount);
-
     Uint32 *land_pixels = malloc(sizeof(Uint32)*terrain_size*terrain_size);
-    generate_biome_pixels(land_pixels, terrain_size, biome, terrain_layer_amount, height, pixel_format);
+    for(int layer=0; layer < sizeof(biome) / sizeof(struct terrain_layer); layer++) {
+        generate_terrain_pixels(land_pixels, terrain_size, biome[layer], height, pixel_format);
+    }
 
     // Put the land image into a texture
     SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 32,terrain_size * sizeof(Uint32), pixel_format_id); // Through a surface 
@@ -114,29 +111,27 @@ int main(){
     SDL_FreeSurface(land_surface);
 
     // Creates an array of cloud layers with their height and density already set, and the land already in the background
-    struct background_layer background_layers[] = {land,{400,1,{-15,25}},{340,2,{-15,25}},{100, 3,{-25,35}}};
+    struct background_layer background_layers[] = {land};
     
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
     printf("There are %i background layer(s)\n",background_layer_amount);
 
     // Convert height map to clouds
+    
+    struct terrain_layer clouds = {
+        .start_color = {180,218,241,255}, // Deep water
+        .end_color = {255,255,255,255}, // Shallow water
+        .start_height = 0, // Minimum value
+        .end_height = 3, // Minimum value
+    };
+
     for (int i = 1; i < background_layer_amount; i++) {
         // Run terrain generation
-        generate_terrain(terrain_size, 1.5 ,1, height);        // Create a cloud pixel map from the height map provided
-        Uint32 pixels[terrain_size][terrain_size];
-        for(int xs=0; xs < terrain_size; xs++) {
-            for(int y=0; y < terrain_size; y++) {
-                if ((height)[xs][y] < background_layers[i].density) {
-                    // Draw Transparent
-                    pixels[xs][y] = SDL_MapRGBA(pixel_format, 0, 0, 0, 0);
-                } else if (background_layers[i].density <= height[xs][y]){
-                    // Draw Greyscale
-                    int greyness = (1-(height[xs][y]-background_layers[i].density)/16) * 225 + 30;
-                    pixels[xs][y] = SDL_MapRGBA(pixel_format, greyness, greyness, greyness, 255);
-                }
-            }
-        }
-        background_layers[i].pixels = *pixels; // Add the pixels to the struct for this layer
+        generate_terrain(terrain_size, 1.5 ,1, height);        
+        // Create a cloud pixel map from a height map
+        Uint32 *pixels = malloc(sizeof(Uint32)*terrain_size*terrain_size);
+        generate_terrain_pixels(pixels, terrain_size, clouds ,height, pixel_format);
+        background_layers[i].pixels = pixels; // Add the pixels to the struct for this layer
         SDL_Texture *cloud_complete_texture = SDL_CreateTexture(renderer, pixel_format_id, SDL_TEXTUREACCESS_TARGET, terrain_size, terrain_size);
         SDL_SetRenderTarget(renderer, cloud_complete_texture);
         SDL_Surface *cloud_surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint32), pixel_format_id);
@@ -145,7 +140,7 @@ int main(){
         // Create cloud shadows by blacking out the cloud texture
         SDL_Texture *cloud_shadow_texture = SDL_CreateTextureFromSurface(renderer,cloud_surface);
         SDL_SetTextureColorMod(cloud_shadow_texture, 30, 30, 30);
-        SDL_SetTextureAlphaMod(cloud_shadow_texture, 140);
+        SDL_SetTextureAlphaMod(cloud_shadow_texture, 200);
         SDL_Rect cloud_shadow_dest = {background_layers[i].shadow_offset[0],background_layers[i].shadow_offset[1],terrain_size,terrain_size};
         // Add the cloud shadows to the frame
         SDL_SetTextureBlendMode(cloud_complete_texture, SDL_BLENDMODE_BLEND);
