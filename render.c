@@ -149,12 +149,10 @@ int main() {
     //
     // Sprites
     //
-    
-    // Avaliable: {"spitfire","me109","avro_lancaster","mosquito","dehavalland_vampire","horten_229","p38_lightening"}
-    
-    const char *sprite_names[] = {"spitfire"};
-    
-    int sprite_amount = sizeof(sprite_names) / sizeof(char *);
+    const char *dir_name[] = {"Sprites"}; 
+    const char *sprite_names[] = {"Spitfire"};
+    int dir_amount = 1;
+    int sprite_amount = 1;
     
     struct sprite {
         SDL_Surface* surface;
@@ -167,23 +165,31 @@ int main() {
     };
     
     struct sprite sprites[sprite_amount];
-    
+
     // Load sprites
-    for (int i = 0; i < sprite_amount; i++) {
-        // Organise the filename extension
-        strcpy(sprites[i].filename, sprite_names[i]);
-        strcat(sprites[i].filename, ".bmp");
-        // Load the sprite from the image
-        sprites[i].surface = SDL_LoadBMP(sprites[i].filename);
-        // Convert to the pixel format we're using
-        SDL_ConvertSurface(sprites[i].surface, pixel_format, 0);
-        // Create texture
-        sprites[i].texture = SDL_CreateTextureFromSurface(renderer, sprites[i].surface);
-        // Delete surface or something
-        sprites[i].position[1] = 50;
-        sprites[i].position[0] = 50;
-        sprites[i].velocity[0] = 0;
-        sprites[i].velocity[1] = 0;
+    for (int j = 0; j < dir_amount; j++){   
+        for (int i = 0; i < sprite_amount; i++) {
+            char spt[80];
+            sprintf(spt, "%i", i+1);
+            // Organise the filename extension
+            strcpy(sprites[i].filename, dir_name[j]);
+            strcat(sprites[i].filename, "/");
+            strcat(sprites[i].filename, sprite_names[i]);
+            strcat(sprites[i].filename, spt);
+            strcat(sprites[i].filename, ".bmp");
+            puts(sprites[i].filename);
+            // Load the sprite from the image
+            sprites[i].surface = SDL_LoadBMP(sprites[i].filename);
+            // Convert to the pixel format we're using
+            SDL_ConvertSurface(sprites[i].surface, pixel_format, 0);
+            // Create texture
+            sprites[i].texture = SDL_CreateTextureFromSurface(renderer, sprites[i].surface);
+            // Delete surface or something
+            sprites[i].position[1] = 50;
+            sprites[i].position[0] = 50;
+            sprites[i].velocity[0] = 0;
+            sprites[i].velocity[1] = 0;
+        }
     }
 
     //
