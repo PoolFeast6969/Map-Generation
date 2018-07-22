@@ -129,7 +129,7 @@ int main() {
         .start_color = {180,218,241,50}, // Deep water
         .end_color = {255,255,255,255}, // Shallow water
         .start_height = 0, // Minimum value
-        .end_height = 3, // Minimum value
+        .end_height = 1.5, // Minimum value
     };
 
     for (int i = 1; i < background_layer_amount; i++) {      
