@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (int size, float scaling, float z_layer, float **height);
+int generate_terrain (int size, float scaling, float x_layer, float y_layer, float z_layer, float **height);
 
 struct terrain_layer {
     int start_color[4];
@@ -71,7 +71,7 @@ int main() {
         height[i] = malloc(sizeof(float)*terrain_size);
     }
 
-    generate_terrain(terrain_size, 4.0, .02, height); // Get a terrain height map
+    generate_terrain(terrain_size, 0, 0, 4.0, .02, height); // Get a terrain height map
 
     //
     // Background
@@ -137,7 +137,7 @@ int main() {
         // Set pixels transparent
         memset(pixels, SDL_MapRGBA(pixel_format,0,0,0,255), sizeof(Uint32)*terrain_size*terrain_size);
         // Run terrain generation
-        generate_terrain(terrain_size, 1.5 ,1, height);  
+        generate_terrain(terrain_size, 0, 0, 1.5 ,1, height);  
         // Create a cloud pixel map from a height map
         get_terrain_pixels(pixels, terrain_size, clouds ,height, pixel_format);
         background_layers[i].pixels = pixels; // Add the pixels to the struct for this layer
