@@ -152,7 +152,7 @@ int main() {
     const char *dir_name[] = {"Sprites"}; 
     const char *sprite_names[] = {"Spitfire"};
     int dir_amount = 1;
-    int sprite_amount = 1;
+    int sprite_amount = 11;
     
     struct sprite {
         SDL_Surface* surface;
@@ -174,7 +174,7 @@ int main() {
             // Organise the filename extension
             strcpy(sprites[i].filename, dir_name[j]);
             strcat(sprites[i].filename, "/");
-            strcat(sprites[i].filename, sprite_names[i]);
+            strcat(sprites[i].filename, sprite_names[j]);
             strcat(sprites[i].filename, spt);
             strcat(sprites[i].filename, ".bmp");
             puts(sprites[i].filename);
