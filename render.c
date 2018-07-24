@@ -84,9 +84,14 @@ int main() {
             .start_height = -3, // Minimum value
             .end_height = 0, // Minimum value
         },{
+            .start_color = {148,148,123,255}, // low sand
+            .end_color = {148,148,123,255}, // high sand
+            .start_height = 0, // Minimum value
+            .end_height = 0.11, // halfway
+        },{
             .start_color = {0,109,0,255}, // low land
             .end_color = {0,218,0,255}, // high land
-            .start_height = 0, // Minimum value
+            .start_height = 0.11, // Minimum value
             .end_height = 2, // halfway
         }
     };
@@ -166,7 +171,7 @@ int main() {
     
     struct sprite sprites[sprite_amount];
 
-    // Load sprites
+    // Loaintd sprites
     for (int j = 0; j < dir_amount; j++){   
         for (int i = 0; i < sprite_amount; i++) {
             char spt[80];
