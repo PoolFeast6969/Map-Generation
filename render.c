@@ -158,6 +158,7 @@ int main() {
     const char *sprite_names[] = {"Spitfire"};
     int dir_amount = 1;
     int sprite_amount = 11;
+    int sprite_middle = (sprite_amount - 1)/2; 
     
     struct sprite {
         SDL_Surface* surface;
@@ -166,6 +167,7 @@ int main() {
         double velocity[2];
         double last_update_time[2];
         int size;
+        int render; // 1 to render and 0 to not. 
         char filename[];
     };
     
@@ -194,6 +196,12 @@ int main() {
             sprites[i].position[0] = 50;
             sprites[i].velocity[0] = 0;
             sprites[i].velocity[1] = 0;
+
+            if (i == sprite_middle){
+                sprites[i].render = 1;
+            } else {
+                sprites[i].render = 0;
+            }
         }
     }
 
@@ -265,14 +273,15 @@ int main() {
             }
         }
         
+        //Setting the Sprites Velocity 
         sprites[0].velocity[0] = right_speed - left_speed;
         sprites[0].velocity[1] = down_speed - up_speed; 
 
         //Stop you from getting speeding tickets on diagnols 
         if (sprites[0].velocity[0] != 0 && sprites[0].velocity[1] != 0){
             if ((sprites[0].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[0].velocity[1] == velocity || sprites[0].velocity[1] == -velocity)){
-                sprites[0].velocity[0] = sprites[0].velocity[0]*0.5; 
-                sprites[0].velocity[1] = sprites[0].velocity[1]*0.5;
+                sprites[0].velocity[0] = sprites[0].velocity[0]*0.7; 
+                sprites[0].velocity[1] = sprites[0].velocity[1]*0.7;
             }   
         }
 
@@ -305,9 +314,23 @@ int main() {
                 double time_since_update = SDL_GetTicks() - sprites[i].last_update_time[a];
                 sprites[i].position[a] = sprites[i].position[a] + sprites[i].velocity[a] * time_since_update;
                 sprites[i].last_update_time[a] = SDL_GetTicks();
+                
+                //Setting the Sprites Velocity 
+                sprites[i].velocity[0] = right_speed - left_speed;
+                sprites[i].velocity[1] = down_speed - up_speed; 
+
+                //Stop you from getting speeding tickets on diagnols 
+                if (sprites[i].velocity[0] != 0 && sprites[i].velocity[1] != 0){
+                    if ((sprites[i].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[i].velocity[1] == velocity || sprites[i].velocity[1] == -velocity)){
+                        sprites[i].velocity[0] = sprites[i].velocity[0]*0.7; 
+                        sprites[i].velocity[1] = sprites[i].velocity[1]*0.7;
+                    }   
+                }
             }
-            SDL_Rect dest = {sprites[i].position[0],sprites[i].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
-            SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
+            if (sprites[i].render == 1){
+                SDL_Rect dest = {sprites[i].position[0],sprites[i].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
+                SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
+            }
         }
         
         SDL_RenderPresent(renderer); // Show the completed frame and wait for vsync
