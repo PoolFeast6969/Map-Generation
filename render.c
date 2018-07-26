@@ -15,7 +15,9 @@ struct terrain_layer {
     float start_height;
 };
 
-int get_terrain_pixels(Uint32 *pixels, int pixel_amount, struct terrain_layer layer, float **height, SDL_PixelFormat *pixel_format) {
+typedef Uint32 pixel;
+
+int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer layer, float **height, SDL_PixelFormat *pixel_format) {
     // Convert height map to pixel color map
     for(int x=0; x < pixel_amount; x++) {
         for(int y=0; y < pixel_amount; y++) {
@@ -53,7 +55,7 @@ int main() {
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
     // Set pixel format to make the textures in
-    Uint32 pixel_format_id = SDL_PIXELFORMAT_RGBA32; // A 32 bit format that lets the OS decide specifics
+    pixel pixel_format_id = SDL_PIXELFORMAT_RGBA32; // A 32 bit format that lets the OS decide specifics
     SDL_PixelFormat *pixel_format = SDL_AllocFormat(pixel_format_id); // Get the actual format object from its ID
     
     //
@@ -97,13 +99,13 @@ int main() {
         }
     };
 
-    Uint32 *land_pixels = malloc(sizeof(Uint32)*terrain_size*terrain_size);
+    pixel *land_pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
     for(int layer=0; layer < sizeof(biome) / sizeof(struct terrain_layer); layer++) {
         get_terrain_pixels(land_pixels, terrain_size, biome[layer], height, pixel_format);
     }
 
     // Put the land image into a texture
-    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 32,terrain_size * sizeof(Uint32), pixel_format_id); // Through a surface 
+    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 32,terrain_size * sizeof(pixel), pixel_format_id); // Through a surface 
     
     struct background_layer {
         int distance; // Distance from view
@@ -112,7 +114,7 @@ int main() {
         double position[2];
         double last_update_time[2]; // When each position was last updated
         SDL_Texture* texture; // Texture in video memory
-        Uint32 *pixels; // Pixel data in normal memory
+        pixel *pixels; // Pixel data in normal memory
     };
 
     // Instantiate the land layer struct
@@ -139,15 +141,15 @@ int main() {
     };
 
     for (int i = 1; i < background_layer_amount; i++) {      
-        Uint32 *pixels = malloc(sizeof(Uint32)*terrain_size*terrain_size);
+        pixel *pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
         // Set pixels transparent
-        memset(pixels, SDL_MapRGBA(pixel_format,0,0,0,255), sizeof(Uint32)*terrain_size*terrain_size);
+        memset(pixels, SDL_MapRGBA(pixel_format,0,0,0,255), sizeof(pixel)*terrain_size*terrain_size);
         // Run terrain generation
         generate_terrain(terrain_size, 0, 0, 1.5 ,1, height);  
         // Create a cloud pixel map from a height map
         get_terrain_pixels(pixels, terrain_size, clouds ,height, pixel_format);
         background_layers[i].pixels = pixels; // Add the pixels to the struct for this layer
-        SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(Uint32), pixel_format_id);
+        SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(pixel), pixel_format_id);
         SDL_Texture *cloud_texture = SDL_CreateTextureFromSurface(renderer,surface);
         background_layers[i].texture = cloud_texture;
     }
