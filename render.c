@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (int size, float scaling, float z_layer, float **height);
+int generate_terrain (int size, float scaling, float x_layer, float y_layer, float z_layer, float **height);
 
 struct terrain_layer {
     int start_color[4];
@@ -71,7 +71,8 @@ int main() {
         height[i] = malloc(sizeof(float)*terrain_size);
     }
 
-    generate_terrain(terrain_size, 4.0, .02, height); // Get a terrain height map
+    generate_terrain(terrain_size, 0, 0, 4.0, .02, height); // Get a terrain height map
+        //}
 
     //
     // Background
@@ -84,9 +85,14 @@ int main() {
             .start_height = -3, // Minimum value
             .end_height = 0, // Minimum value
         },{
+            .start_color = {148,148,123,255}, // low sand
+            .end_color = {148,148,123,255}, // high sand
+            .start_height = 0, // Minimum value
+            .end_height = 0.11, // halfway
+        },{
             .start_color = {0,109,0,255}, // low land
             .end_color = {0,218,0,255}, // high land
-            .start_height = 0, // Minimum value
+            .start_height = 0.11, // Minimum value
             .end_height = 2, // halfway
         }
     };
@@ -137,7 +143,7 @@ int main() {
         // Set pixels transparent
         memset(pixels, SDL_MapRGBA(pixel_format,0,0,0,255), sizeof(Uint32)*terrain_size*terrain_size);
         // Run terrain generation
-        generate_terrain(terrain_size, 1.5 ,1, height);  
+        generate_terrain(terrain_size, 0, 0, 1.5 ,1, height);  
         // Create a cloud pixel map from a height map
         get_terrain_pixels(pixels, terrain_size, clouds ,height, pixel_format);
         background_layers[i].pixels = pixels; // Add the pixels to the struct for this layer
@@ -149,12 +155,11 @@ int main() {
     //
     // Sprites
     //
-    
-    // Avaliable: {"spitfire","me109","avro_lancaster","mosquito","dehavalland_vampire","horten_229","p38_lightening"}
-    
-    const char *sprite_names[] = {"spitfire"};
-    
-    int sprite_amount = sizeof(sprite_names) / sizeof(char *);
+    const char *dir_name[] = {"Sprites"}; 
+    const char *sprite_names[] = {"Spitfire"};
+    int dir_amount = 1;
+    int sprite_amount = 11;
+    int sprite_middle = (sprite_amount - 1)/2; 
     
     struct sprite {
         SDL_Surface* surface;
@@ -163,27 +168,44 @@ int main() {
         double velocity[2];
         double last_update_time[2];
         int size;
+        int render; // 1 to render and 0 to not. 
+        int number; 
         char filename[];
     };
     
     struct sprite sprites[sprite_amount];
-    
-    // Load sprites
-    for (int i = 0; i < sprite_amount; i++) {
-        // Organise the filename extension
-        strcpy(sprites[i].filename, sprite_names[i]);
-        strcat(sprites[i].filename, ".bmp");
-        // Load the sprite from the image
-        sprites[i].surface = SDL_LoadBMP(sprites[i].filename);
-        // Convert to the pixel format we're using
-        SDL_ConvertSurface(sprites[i].surface, pixel_format, 0);
-        // Create texture
-        sprites[i].texture = SDL_CreateTextureFromSurface(renderer, sprites[i].surface);
-        // Delete surface or something
-        sprites[i].position[1] = 50;
-        sprites[i].position[0] = 50;
-        sprites[i].velocity[0] = 0;
-        sprites[i].velocity[1] = 0;
+
+    // Loaintd sprites
+    for (int j = 0; j < dir_amount; j++){   
+        for (int i = 0; i < sprite_amount; i++) {
+            char spt[80];
+            sprintf(spt, "%i", i+1);
+            // Organise the filename extension
+            strcpy(sprites[i].filename, dir_name[j]);
+            strcat(sprites[i].filename, "/");
+            strcat(sprites[i].filename, sprite_names[j]);
+            strcat(sprites[i].filename, spt);
+            strcat(sprites[i].filename, ".bmp");
+            puts(sprites[i].filename);
+            // Load the sprite from the image
+            sprites[i].surface = SDL_LoadBMP(sprites[i].filename);
+            // Convert to the pixel format we're using
+            SDL_ConvertSurface(sprites[i].surface, pixel_format, 0);
+            // Create texture
+            sprites[i].texture = SDL_CreateTextureFromSurface(renderer, sprites[i].surface);
+            // Delete surface or something
+            sprites[i].position[1] = 50;
+            sprites[i].position[0] = 50;
+            sprites[i].velocity[0] = 0;
+            sprites[i].velocity[1] = 0;
+            sprites[i].number = i + 1; 
+
+            if (i == sprite_middle){
+                sprites[i].render = 1;
+            } else {
+                sprites[i].render = 0;
+            }
+        }
     }
 
     //
@@ -203,7 +225,9 @@ int main() {
     int left_speed = 0; 
     int right_speed = 0; 
     int up_speed = 0; 
-    int down_speed = 0; 
+    int down_speed = 0;
+    int animation_speed = 0.05;
+    int animation_time = SDL_GetTicks();   
 
     // Main loop that updates at vsync in case we ever need animations
     while (run) {
@@ -218,9 +242,23 @@ int main() {
                     switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
                             left_speed = velocity;
+                            for (int i = 0; i < sprite_amount; i++) {
+                                if ((SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].render == 1) && (sprites[i].number != 1)){
+                                    sprites[i - 1].render = 1; 
+                                    sprites[i].render = 0; 
+                                    animation_time = SDL_GetTicks(); 
+                                }
+                            }
                             break; 
                         case SDLK_RIGHT:
                             right_speed = velocity;
+                            for (int i = 0; i < sprite_amount; i++) {
+                                if ((SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].render == 1) && (sprites[i].number != 11)){
+                                    sprites[i + 1].render = 1; 
+                                    sprites[i].render = 0;    
+                                    animation_time = SDL_GetTicks();                                   
+                                }
+                            }                           
                             break; 
                         case SDLK_UP:
                             up_speed = velocity;
@@ -232,14 +270,15 @@ int main() {
                             break;
                     }
                     break;
+
                 case SDL_KEYUP:
                     // Check the SDLKey values and move change the coords
                     switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
-                            left_speed = 0;
+                            left_speed = 0;                           
                             break;
                         case SDLK_RIGHT:
-                            right_speed = 0;
+                            right_speed = 0;                            
                             break;
                         case SDLK_UP:
                             up_speed = 0;
@@ -253,25 +292,21 @@ int main() {
                     break;
             }
         }
-        
-        sprites[0].velocity[0] = right_speed - left_speed;
-        sprites[0].velocity[1] = down_speed - up_speed; 
 
-        //Stop you from getting speeding tickets on diagnols 
-        if (sprites[0].velocity[0] != 0 && sprites[0].velocity[1] != 0){
-            if ((sprites[0].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[0].velocity[1] == velocity || sprites[0].velocity[1] == -velocity)){
-                sprites[0].velocity[0] = sprites[0].velocity[0]*0.5; 
-                sprites[0].velocity[1] = sprites[0].velocity[1]*0.5;
-            }   
+        //Return animation if no inputs 
+        if (SDL_GetTicks() - animation_time > animation_speed) { 
+            for (int i = 1; i < sprite_amount +1; i++) {
+                if ((sprites[i].render == 1) && (sprites[i].number > sprite_middle)){
+                    sprites[i - 1].render = 1; 
+                    sprites[i].render = 0; 
+                    animation_time = SDL_GetTicks(); 
+                } else if ((sprites[i].render == 1) && (sprites[i].number < sprite_middle)){
+                    sprites[i + 1].render = 1; 
+                    sprites[i].render = 0; 
+                    animation_time = SDL_GetTicks();     
+                }                
+            }     
         }
-
-        //Stop you leaving the map 
-        //if (sprites[0].position[0] <= 0){
-        //    sprites[0].position[0] = 0; 
-        //    if (sprites[0].velocity[0] < 0){
-        //        sprites[0].velocity[0] = 0;
-        //    }                  
-        //}        
 
         // Draw each of the background layers with the correct position
         for (int i = 0; i < background_layer_amount; i++) {
@@ -294,9 +329,23 @@ int main() {
                 double time_since_update = SDL_GetTicks() - sprites[i].last_update_time[a];
                 sprites[i].position[a] = sprites[i].position[a] + sprites[i].velocity[a] * time_since_update;
                 sprites[i].last_update_time[a] = SDL_GetTicks();
+                
+                //Setting the Sprites Velocity 
+                sprites[i].velocity[0] = right_speed - left_speed;
+                sprites[i].velocity[1] = down_speed - up_speed; 
+
+                //Stop you from getting speeding tickets on diagnols 
+                if (sprites[i].velocity[0] != 0 && sprites[i].velocity[1] != 0){
+                    if ((sprites[i].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[i].velocity[1] == velocity || sprites[i].velocity[1] == -velocity)){
+                        sprites[i].velocity[0] = sprites[i].velocity[0]*0.7; 
+                        sprites[i].velocity[1] = sprites[i].velocity[1]*0.7;
+                    }   
+                }
             }
-            SDL_Rect dest = {sprites[i].position[0],sprites[i].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
-            SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
+            if (sprites[i].render == 1){
+                SDL_Rect dest = {sprites[i].position[0],sprites[i].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
+                SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
+            }
         }
         
         SDL_RenderPresent(renderer); // Show the completed frame and wait for vsync
