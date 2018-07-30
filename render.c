@@ -202,7 +202,7 @@ int main() {
             sprites[i].velocity[1] = 0;
             sprites[i].number = i + 1; 
 
-            if (i == sprite_middle){
+            if (i == sprite_middle + 1){
                 sprites[i].render = 1;
             } else {
                 sprites[i].render = 0;
@@ -228,7 +228,7 @@ int main() {
     int right_speed = 0; 
     int up_speed = 0; 
     int down_speed = 0;
-    int animation_speed = 10;
+    int animation_speed = 50;
     int animation_time = SDL_GetTicks();   
 
     // Main loop that updates at vsync in case we ever need animations
@@ -326,11 +326,11 @@ int main() {
                         sprites[i + 1].render = 1; 
                         sprites[i].render = 0;    
                         animation_time = SDL_GetTicks();                                   
-                    } else if ((sprites[i].velocity[0] == 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number > sprite_middle)){
+                    } else if ((sprites[i].velocity[0] == 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number > sprite_middle + 1)){
                         sprites[i - 1].render = 1; 
                         sprites[i].render = 0; 
                         animation_time = SDL_GetTicks(); 
-                    } else if ((sprites[i].velocity[0] == 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number < sprite_middle)){
+                    } else if ((sprites[i].velocity[0] == 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number < sprite_middle + 1)){
                         sprites[i + 1].render = 1; 
                         sprites[i].render = 0; 
                         animation_time = SDL_GetTicks();     
