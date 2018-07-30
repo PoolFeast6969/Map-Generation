@@ -202,7 +202,7 @@ int main() {
             sprites[i].velocity[1] = 0;
             sprites[i].number = i + 1; 
 
-            if (i == sprite_middle + 1){
+            if (i == sprite_middle){
                 sprites[i].render = 1;
             } else {
                 sprites[i].render = 0;
@@ -308,13 +308,12 @@ int main() {
                 sprites[i].velocity[1] = down_speed - up_speed; 
 
                 //Stop you from getting speeding tickets on diagnols 
-                    if (sprites[i].velocity[0] != 0 && sprites[i].velocity[1] != 0){
-                        if ((sprites[i].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[i].velocity[1] == velocity || sprites[i].velocity[1] == -velocity)){
-                            sprites[i].velocity[0] = sprites[i].velocity[0]*0.7; 
-                            sprites[i].velocity[1] = sprites[i].velocity[1]*0.7;
-                        }   
-                    }
-                }                
+                if (sprites[i].velocity[0] != 0 && sprites[i].velocity[1] != 0){
+                    if ((sprites[i].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[i].velocity[1] == velocity || sprites[i].velocity[1] == -velocity)){
+                        sprites[i].velocity[0] = sprites[i].velocity[0]*0.707; 
+                        sprites[i].velocity[1] = sprites[i].velocity[1]*0.707;
+                    }   
+                }      
 
                 //Roll animation command
                 if (sprites[i].render == 1){
@@ -335,7 +334,8 @@ int main() {
                         sprites[i].render = 0; 
                         animation_time = SDL_GetTicks();     
                     }   
-                }    
+                }  
+            }      
 
    
             if (sprites[i].render == 1){
