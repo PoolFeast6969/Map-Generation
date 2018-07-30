@@ -226,7 +226,7 @@ int main() {
     int right_speed = 0; 
     int up_speed = 0; 
     int down_speed = 0;
-    int animation_speed = 0.05;
+    int animation_speed = 10;
     int animation_time = SDL_GetTicks();   
 
     // Main loop that updates at vsync in case we ever need animations
@@ -242,23 +242,9 @@ int main() {
                     switch( window_event.key.keysym.sym ){
                         case SDLK_LEFT:
                             left_speed = velocity;
-                            for (int i = 0; i < sprite_amount; i++) {
-                                if ((SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].render == 1) && (sprites[i].number != 1)){
-                                    sprites[i - 1].render = 1; 
-                                    sprites[i].render = 0; 
-                                    animation_time = SDL_GetTicks(); 
-                                }
-                            }
                             break; 
                         case SDLK_RIGHT:
-                            right_speed = velocity;
-                            for (int i = 0; i < sprite_amount; i++) {
-                                if ((SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].render == 1) && (sprites[i].number != 11)){
-                                    sprites[i + 1].render = 1; 
-                                    sprites[i].render = 0;    
-                                    animation_time = SDL_GetTicks();                                   
-                                }
-                            }                           
+                            right_speed = velocity;                      
                             break; 
                         case SDLK_UP:
                             up_speed = velocity;
@@ -293,21 +279,6 @@ int main() {
             }
         }
 
-        //Return animation if no inputs 
-        if (SDL_GetTicks() - animation_time > animation_speed) { 
-            for (int i = 1; i < sprite_amount +1; i++) {
-                if ((sprites[i].render == 1) && (sprites[i].number > sprite_middle)){
-                    sprites[i - 1].render = 1; 
-                    sprites[i].render = 0; 
-                    animation_time = SDL_GetTicks(); 
-                } else if ((sprites[i].render == 1) && (sprites[i].number < sprite_middle)){
-                    sprites[i + 1].render = 1; 
-                    sprites[i].render = 0; 
-                    animation_time = SDL_GetTicks();     
-                }                
-            }     
-        }
-
         // Draw each of the background layers with the correct position
         for (int i = 0; i < background_layer_amount; i++) {
             // Determine if it needs to be have its position changed
@@ -335,13 +306,36 @@ int main() {
                 sprites[i].velocity[1] = down_speed - up_speed; 
 
                 //Stop you from getting speeding tickets on diagnols 
-                if (sprites[i].velocity[0] != 0 && sprites[i].velocity[1] != 0){
-                    if ((sprites[i].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[i].velocity[1] == velocity || sprites[i].velocity[1] == -velocity)){
-                        sprites[i].velocity[0] = sprites[i].velocity[0]*0.7; 
-                        sprites[i].velocity[1] = sprites[i].velocity[1]*0.7;
+                    if (sprites[i].velocity[0] != 0 && sprites[i].velocity[1] != 0){
+                        if ((sprites[i].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[i].velocity[1] == velocity || sprites[i].velocity[1] == -velocity)){
+                            sprites[i].velocity[0] = sprites[i].velocity[0]*0.7; 
+                            sprites[i].velocity[1] = sprites[i].velocity[1]*0.7;
+                        }   
+                    }
+                }                
+
+                //Roll animation command
+                if (sprites[i].render == 1){
+                    if ((sprites[i].velocity[0] < 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number > 1)){
+                        sprites[i - 1].render = 1; 
+                        sprites[i].render = 0; 
+                        animation_time = SDL_GetTicks(); 
+                    } else if ((sprites[i].velocity[0] > 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number < 11)){
+                        sprites[i + 1].render = 1; 
+                        sprites[i].render = 0;    
+                        animation_time = SDL_GetTicks();                                   
+                    } else if ((sprites[i].velocity[0] == 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number > sprite_middle)){
+                        sprites[i - 1].render = 1; 
+                        sprites[i].render = 0; 
+                        animation_time = SDL_GetTicks(); 
+                    } else if ((sprites[i].velocity[0] == 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number < sprite_middle)){
+                        sprites[i + 1].render = 1; 
+                        sprites[i].render = 0; 
+                        animation_time = SDL_GetTicks();     
                     }   
-                }
-            }
+                }    
+
+   
             if (sprites[i].render == 1){
                 SDL_Rect dest = {sprites[i].position[0],sprites[i].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
                 SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
@@ -351,7 +345,7 @@ int main() {
         SDL_RenderPresent(renderer); // Show the completed frame and wait for vsync
         SDL_RenderClear(renderer); // Erase the screen (first action of the new frame)
     }
-    
+
     //
     // Clean Up
     //
