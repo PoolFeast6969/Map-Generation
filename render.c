@@ -140,17 +140,16 @@ int main() {
     };
 
     for (int i = 1; i < background_layer_amount; i++) {      
-        pixel* cloud_pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
+        // Allocate pixel memory and return its pointer
+        background_layers[i].pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
         // Set pixels transparent
-        for(int i=0;i<terrain_size*terrain_size;i++) cloud_pixels[i] = SDL_MapRGBA(pixel_format,0,0,0,0);
+        for(int p=0;p<terrain_size*terrain_size;p++) background_layers[i].pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
         // Run terrain generation
         generate_terrain(terrain_size, 0, 0, 1.5 ,1, height);
         // Create a cloud pixel map from a height map
-        get_terrain_pixels(cloud_pixels, terrain_size, clouds ,height, pixel_format);
-        background_layers[i].pixels = cloud_pixels; // Add the pixels to the struct for this layer
+        get_terrain_pixels(background_layers[i].pixels, terrain_size, clouds ,height, pixel_format);
         SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(pixel), pixel_format_id);
-        SDL_Texture *cloud_texture = SDL_CreateTextureFromSurface(renderer,surface);
-        background_layers[i].texture = cloud_texture;
+        background_layers[i].texture = SDL_CreateTextureFromSurface(renderer,surface);
     }
     
     //
