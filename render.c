@@ -27,7 +27,7 @@ int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer lay
                         // linearly interpolate between the two end colors
                         pixel_color[color] = layer.start_color[color] + ((layer.start_color[color] - layer.end_color[color])*(height[x][y]-layer.start_height))/(layer.start_height - layer.end_height);
                     }
-                    pixels[x + y*pixel_amount] = SDL_MapRGBA(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2],pixel_color[3]);
+                    pixels[x*pixel_amount + y] = SDL_MapRGBA(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2],pixel_color[3]);
             }
         }
     }
@@ -74,7 +74,6 @@ int main() {
     }
 
     generate_terrain(terrain_size, 0, 0, 4.0, .02, height); // Get a terrain height map
-        //}
 
     //
     // Background
@@ -88,18 +87,18 @@ int main() {
             .end_height = 0, // Minimum value
         },{
             .start_color = {148,148,123,255}, // low sand
-            .end_color = {148,148,123,255}, // high sand
+            .end_color = {170,180,150,255}, // high sand
             .start_height = 0, // Minimum value
             .end_height = 0.11, // halfway
         },{
-            .start_color = {0,109,0,255}, // low land
+            .start_color = {0,125,0,255}, // low land
             .end_color = {0,218,0,255}, // high land
             .start_height = 0.11, // Minimum value
             .end_height = 2, // halfway
         }
     };
 
-    pixel *land_pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
+    pixel* land_pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
     for(int layer=0; layer < sizeof(biome) / sizeof(struct terrain_layer); layer++) {
         get_terrain_pixels(land_pixels, terrain_size, biome[layer], height, pixel_format);
     }
@@ -114,7 +113,7 @@ int main() {
         double position[2];
         double last_update_time[2]; // When each position was last updated
         SDL_Texture* texture; // Texture in video memory
-        pixel *pixels; // Pixel data in normal memory
+        pixel* pixels; // Pixel data in normal memory
     };
 
     // Instantiate the land layer struct
@@ -127,7 +126,7 @@ int main() {
     SDL_FreeSurface(land_surface);
 
     // Creates an array of cloud layers with their height and density already set, and the land already in the background
-    struct background_layer background_layers[] = {land,{400,}};
+    struct background_layer background_layers[] = {land,{400,300,}};
     
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
     printf("There are %i background layer(s)\n",background_layer_amount);
@@ -141,17 +140,17 @@ int main() {
     };
 
     for (int i = 1; i < background_layer_amount; i++) {      
-        pixel *pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
+        // Allocate pixel memory and return its pointer
+        background_layers[i].pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
         // Set pixels transparent
-        memset(pixels, SDL_MapRGBA(pixel_format,0,0,0,255), sizeof(pixel)*terrain_size*terrain_size);
+        for(int p=0;p<terrain_size*terrain_size;p++) background_layers[i].pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
         // Run terrain generation
-        generate_terrain(terrain_size, 0, 0, 1.5 ,1, height);  
+        generate_terrain(terrain_size, 0, 0, 1.5 ,1, height);
         // Create a cloud pixel map from a height map
-        get_terrain_pixels(pixels, terrain_size, clouds ,height, pixel_format);
-        background_layers[i].pixels = pixels; // Add the pixels to the struct for this layer
+        get_terrain_pixels(background_layers[i].pixels, terain_size, clouds ,height, pixel_format);
+
         SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(pixel), pixel_format_id);
-        SDL_Texture *cloud_texture = SDL_CreateTextureFromSurface(renderer,surface);
-        background_layers[i].texture = cloud_texture;
+        background_layers[i].texture = SDL_CreateTextureFromSurface(renderer,surface);
     }
     
     //
