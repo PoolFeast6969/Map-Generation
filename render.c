@@ -147,7 +147,8 @@ int main() {
         // Run terrain generation
         generate_terrain(terrain_size, 0, 0, 1.5 ,1, height);
         // Create a cloud pixel map from a height map
-        get_terrain_pixels(background_layers[i].pixels, terrain_size, clouds ,height, pixel_format);
+        get_terrain_pixels(background_layers[i].pixels, terain_size, clouds ,height, pixel_format);
+
         SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(pixel), pixel_format_id);
         background_layers[i].texture = SDL_CreateTextureFromSurface(renderer,surface);
     }
@@ -226,7 +227,7 @@ int main() {
     double right_speed = 0; 
     double up_speed = 0; 
     double down_speed = 0;
-    double animation_speed = 1;
+    double animation_speed = 0.02;
     double animation_time = SDL_GetTicks();   
 
     // Main loop that updates at vsync in case we ever need animations
