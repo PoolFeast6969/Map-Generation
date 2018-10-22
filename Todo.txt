@@ -1,0 +1,8 @@
+Trees for the terrain (shift highest frequency noise to mimic wing)
+Changing altiude function for the map
+Engine properties (throttle increases speed but also increases engine heat)
+Dodge function (barrel roll)
+Clouds (aliasing to make them smoother) (if combined with changing alt climb through them) (plane shadow on cloud) (cloud shadow)
+Shooting 
+Bearings (Rotate the map when banking) 
+
