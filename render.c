@@ -159,26 +159,34 @@ int main() {
     //
     const char *dir_name[] = {"Sprites"}; 
     const char *sprite_names[] = {"Spitfire"};
-    int dir_amount = 1;
+    int character_amount = 1;
     int sprite_amount = 11;
     int sprite_middle = (sprite_amount - 1)/2; 
     
     struct sprite {
         SDL_Surface* surface;
         SDL_Texture* texture;
-        double position[2];
-        double velocity[2];
-        double last_update_time[2];
         int size;
         int render; // 1 to render and 0 to not. 
         int number; 
         char filename[];
     };
+
+    struct character {
+        double position[2];
+        double velocity[2];
+        double last_update_time[2];
+    };
     
     struct sprite sprites[sprite_amount];
+    struct character character[character_amount];
 
     // Loaintd sprites
-    for (int j = 0; j < dir_amount; j++){   
+    for (int j = 0; j < character_amount; j++){   
+        character[j].position[1] = 50;
+        character[j].position[0] = 50;
+        character[j].velocity[0] = 0;
+        character[j].velocity[1] = 0;    
         for (int i = 0; i < sprite_amount; i++) {
             char spt[80];
             sprintf(spt, "%i", i+1);
@@ -196,10 +204,6 @@ int main() {
             // Create texture
             sprites[i].texture = SDL_CreateTextureFromSurface(renderer, sprites[i].surface);
             // Delete surface or something
-            sprites[i].position[1] = 50;
-            sprites[i].position[0] = 50;
-            sprites[i].velocity[0] = 0;
-            sprites[i].velocity[1] = 0;
             sprites[i].number = i + 1; 
 
             if (i == sprite_middle){
@@ -229,7 +233,7 @@ int main() {
     int up_speed = 0; 
     int down_speed = 0;
     int animation_speed = 50;
-    int animation_time = SDL_GetTicks();   
+    float animation_time = SDL_GetTicks();   
 
     // Main loop that updates at vsync in case we ever need animations
     while (run) {
@@ -290,59 +294,67 @@ int main() {
                 background_layers[i].position[a] = background_layers[i].position[a] + velocity * time_since_update;
                 background_layers[i].last_update_time[a] = SDL_GetTicks();
             }
+
             SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
-            SDL_Rect new_position = {background_layers[i].position[0],background_layers[i].position[1], terrain_size*pixel_scaling, terrain_size*pixel_scaling};
+            SDL_Rect new_position = {background_layers[i].position[0], background_layers[i].position[1], terrain_size*pixel_scaling, terrain_size*pixel_scaling};
             // Add to frame
             SDL_RenderCopy(renderer,background_layers[i].texture,NULL,&new_position);
         }
-        
-        // Draw each of the sprites with the correct position
-        for (int i = 0; i < sprite_amount; i++) {
-            for (int a = 0; a < 2 ; a++) {
-                double time_since_update = SDL_GetTicks() - sprites[i].last_update_time[a];
-                sprites[i].position[a] = sprites[i].position[a] + sprites[i].velocity[a] * time_since_update;
-                sprites[i].last_update_time[a] = SDL_GetTicks();
-                
-                //Setting the Sprites Velocity 
-                sprites[i].velocity[0] = right_speed - left_speed;
-                sprites[i].velocity[1] = down_speed - up_speed; 
 
-                //Stop you from getting speeding tickets on diagnols 
-                if (sprites[i].velocity[0] != 0 && sprites[i].velocity[1] != 0){
-                    if ((sprites[i].velocity[0] == velocity || sprites[0].velocity[0] == -velocity ) && (sprites[i].velocity[1] == velocity || sprites[i].velocity[1] == -velocity)){
-                        sprites[i].velocity[0] = sprites[i].velocity[0]*0.707; 
-                        sprites[i].velocity[1] = sprites[i].velocity[1]*0.707;
-                    }   
-                }      
+        // This records the velocity and postion for the character         
+        for (int j = 0; j < character_amount; j++) {
+            //Setting the Sprites Velocity 
+            character[j].velocity[0] = right_speed - left_speed;
+            character[j].velocity[1] = down_speed - up_speed; 
 
+            //Stop you from getting speeding tickets on diagnols 
+            if (character[j].velocity[0] != 0 && character[j].velocity[1] != 0){
+                if ((character[j].velocity[0] == velocity || character[0].velocity[0] == -velocity ) && (character[j].velocity[1] == velocity || character[j].velocity[1] == -velocity)){
+                    character[j].velocity[0] = character[j].velocity[0]*0.707; 
+                    character[j].velocity[1] = character[j].velocity[1]*0.707;
+                }   
+            } 
+
+            // Update the Position     
+            for (int a = 0; a < 2 ; a++) {    
+                double time_since_update = SDL_GetTicks() - character[j].last_update_time[a];
+                character[j].position[a] = character[j].position[a] + character[j].velocity[a] * time_since_update;
+                character[j].last_update_time[a] = SDL_GetTicks();
+            }  
+
+            //This manages the sprites for animations 
+            for (int i = 0; i < sprite_amount; i++) {     
                 //Roll animation command
-                if (sprites[i].render == 1){
-                    if ((sprites[i].velocity[0] < 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number > 1)){
+                if (sprites[i].render == 1 && (SDL_GetTicks() - animation_time > animation_speed)){
+                    //Rolling when moving left/right 
+                    if ((character[j].velocity[0] < 0) && (sprites[i].number > 1)){
                         sprites[i - 1].render = 1; 
                         sprites[i].render = 0; 
                         animation_time = SDL_GetTicks(); 
-                    } else if ((sprites[i].velocity[0] > 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number < 11)){
+                    } else if ((character[j].velocity[0] > 0) && (sprites[i].number < 11)){
                         sprites[i + 1].render = 1; 
                         sprites[i].render = 0;    
-                        animation_time = SDL_GetTicks();                                   
-                    } else if ((sprites[i].velocity[0] == 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number > sprite_middle + 1)){
+                        animation_time = SDL_GetTicks(); 
+
+                    //Returning to middle when not moving                                       
+                    } else if ((character[j].velocity[0] == 0) && (sprites[i].number > sprite_middle + 1)){
                         sprites[i - 1].render = 1; 
                         sprites[i].render = 0; 
                         animation_time = SDL_GetTicks(); 
-                    } else if ((sprites[i].velocity[0] == 0) && (SDL_GetTicks() - animation_time > animation_speed) && (sprites[i].number < sprite_middle + 1)){
+                    } else if ((character[j].velocity[0] == 0) && (sprites[i].number < sprite_middle + 1)){
                         sprites[i + 1].render = 1; 
                         sprites[i].render = 0; 
                         animation_time = SDL_GetTicks();     
                     }   
-                }  
-            }      
+                }      
 
-   
-            if (sprites[i].render == 1){
-                SDL_Rect dest = {sprites[i].position[0],sprites[i].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
-                SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
+                // Render the sprites
+                if (sprites[i].render == 1){
+                    SDL_Rect dest = {character[j].position[0],character[j].position[1],sprites[i].surface->w*pixel_scaling,sprites[i].surface->h*pixel_scaling};
+                    SDL_RenderCopyEx(renderer, sprites[i].texture, NULL, &dest, 0, NULL, SDL_FLIP_NONE);
+                }
             }
-        }
+        }    
         
         SDL_RenderPresent(renderer); // Show the completed frame and wait for vsync
         SDL_RenderClear(renderer); // Erase the screen (first action of the new frame)
