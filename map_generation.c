@@ -57,6 +57,10 @@ double noise(double x, double y, double z) {
                                     grad(p[BB+1], x-1, y-1, z-1 ))));
 }
 
+float max = 0;
+float min = 0;
+
+
 int generate_terrain (int size, float z_layer, float **z) {
     // Scaling Factors 
     float scaling[] = {1}; // 4.5, 5, 5.5, 6, 6.5, 7, 7.5};
@@ -69,6 +73,15 @@ int generate_terrain (int size, float z_layer, float **z) {
             //Adding Altitudes for different frequencies 
             for(int i = 0; i < 1; i++) {
                 z[x][y] += noise(x_noise*scaling[i],y_noise*scaling[i],z_layer);//scaling[i];    
+                if (z[x][y] > max) {
+                    max = z[x][y];
+                    printf("max: %f \n", max);       
+                }
+                if (z[x][y] < min) {
+                    min = z[x][y];
+                    printf("min: %f \n", min);       
+                }
+
             }        
         }
     }
