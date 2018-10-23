@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (int size, float scaling, float x_layer, float y_layer, float z_layer, float **height);
+int generate_terrain (int size, double x_layer, double y_layer, double z_layer, float **z);
 
 struct terrain_layer {
     int start_color[4];
@@ -73,7 +73,7 @@ int main() {
         height[i] = malloc(sizeof(float)*terrain_size);
     }
 
-    generate_terrain(terrain_size, 0, 0, 4.0, .02, height); // Get a terrain height map
+    generate_terrain(terrain_size, 0, 0, 3.0, height); // Get a terrain height map
 
     //
     // Background
@@ -83,17 +83,17 @@ int main() {
         {
             .start_color = {36,36,85,255}, // Deep water
             .end_color = {36,109,170,255}, // Shallow water
-            .start_height = -1, // Minimum value
-            .end_height = 0, // Minimum value
+            .start_height = 0, // Minimum value
+            .end_height = 0.4, // Minimum value
         },{
             .start_color = {148,148,123,255}, // low sand
             .end_color = {170,180,150,255}, // high sand
-            .start_height = 0, // Minimum value
-            .end_height = 0.11, // halfway
+            .start_height = 0.4, // Minimum value
+            .end_height = 0.45, // halfway
         },{
             .start_color = {0,125,0,255}, // low land
             .end_color = {0,218,0,255}, // high land
-            .start_height = 0.11, // Minimum value
+            .start_height = 0.45, // Minimum value
             .end_height = 1, // halfway
         }
     };
@@ -135,8 +135,8 @@ int main() {
     struct terrain_layer clouds = {
         .start_color = {180,218,241,50}, // Deep water
         .end_color = {255,255,255,255}, // Shallow water
-        .start_height = -2, // Minimum value
-        .end_height = 1.5, // Maximum value
+        .start_height = 0.5, // Minimum value
+        .end_height = 1, // Maximum value
     };
 
     for (int i = 1; i < background_layer_amount; i++) {      
@@ -145,7 +145,7 @@ int main() {
         // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
         for(int p=0;p<terrain_size*terrain_size;p++) background_layers[i].pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
         // Run terrain generation
-        generate_terrain(terrain_size, 0, 0, 1.5 ,1, height);
+        generate_terrain(terrain_size, 0, 0, 100.0, height);
         // Create a cloud pixel map from a height map
         get_terrain_pixels(background_layers[i].pixels, terrain_size, clouds ,height, pixel_format);
 
@@ -218,7 +218,7 @@ int main() {
     //
     
     // yep all these pixels ae the same size
-    double pixel_scaling = 10;
+    double pixel_scaling = 8;
 
     double view_velocity[] = {0,0};
     SDL_Event window_event;
