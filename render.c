@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (int size, float z_layer, float **height);
+int generate_terrain (int size, float z_layer, float **z,float lmao);
 
 int main(){
     //
@@ -35,7 +35,7 @@ int main(){
     }
 
     // Run terrain generation
-    generate_terrain(terrain_size, 1.0, height);
+    generate_terrain(terrain_size, 1.0, height, 1);
 
     //
     // Background
@@ -71,7 +71,7 @@ int main(){
     // Convert height map to clouds
     for (int i = 1; i < background_layer_amount; i++) {
         // Run terrain generation
-        generate_terrain(terrain_size ,1, height);        // Create a cloud pixel map from the height map provided
+        generate_terrain(terrain_size ,1, height, 1);        // Create a cloud pixel map from the height map provided
         Uint32 pixels[terrain_size][terrain_size];
         for(int columns=0; columns < terrain_size; columns++) {
             for(int rows=0; rows < terrain_size; rows++) {
@@ -235,7 +235,7 @@ int main(){
         //    }                  
         //}        
 
-        generate_terrain(terrain_size, z_layer, height);
+        generate_terrain(terrain_size, z_layer, height, z_layer);
         z_layer = z_layer + .01;
         // Convert height map to pixel color map
         Uint32 land_pixels[terrain_size][terrain_size]; // Create the array to store the pixels
