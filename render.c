@@ -135,19 +135,19 @@ int main() {
     struct terrain_layer clouds = {
         .start_color = {180,218,241,50}, // Deep water
         .end_color = {255,255,255,255}, // Shallow water
-        .start_height = 0, // Minimum value
-        .end_height = 1.5, // Minimum value
+        .start_height = -2, // Minimum value
+        .end_height = 1.5, // Maximum value
     };
 
     for (int i = 1; i < background_layer_amount; i++) {      
         // Allocate pixel memory and return its pointer
         background_layers[i].pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
-        // Set pixels transparent
+        // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
         for(int p=0;p<terrain_size*terrain_size;p++) background_layers[i].pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
         // Run terrain generation
         generate_terrain(terrain_size, 0, 0, 1.5 ,1, height);
         // Create a cloud pixel map from a height map
-        get_terrain_pixels(background_layers[i].pixels, terain_size, clouds ,height, pixel_format);
+        get_terrain_pixels(background_layers[i].pixels, terrain_size, clouds ,height, pixel_format);
 
         SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(pixel), pixel_format_id);
         background_layers[i].texture = SDL_CreateTextureFromSurface(renderer,surface);
