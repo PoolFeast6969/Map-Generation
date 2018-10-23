@@ -24,7 +24,7 @@ int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer lay
                 if (layer.start_height <= height[x][y] && layer.end_height >= height[x][y]) { // the layer of interest
                     float pixel_color[4]; 
                     for(int color=0; color <= 3; color++) {
-                        // linearly interpolate between the two end colors
+                        // linearly interpolate between the two end colors // TODO add something so beaches aren't so discontinious
                         pixel_color[color] = layer.start_color[color] + ((layer.start_color[color] - layer.end_color[color])*(height[x][y]-layer.start_height))/(layer.start_height - layer.end_height);
                     }
                     pixels[x*pixel_amount + y] = SDL_MapRGBA(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2],pixel_color[3]);
@@ -55,14 +55,18 @@ int main() {
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
     // Set pixel format to make the textures in
-    pixel pixel_format_id = SDL_PIXELFORMAT_RGBA32; // A 32 bit format that lets the OS decide specifics
+    Uint32 pixel_format_id = SDL_PIXELFORMAT_RGBA32; // should be able to do whatever you want here, just remember to change typedef pixel
     SDL_PixelFormat *pixel_format = SDL_AllocFormat(pixel_format_id); // Get the actual format object from its ID
     
     //
     // Terrain Heights Array
     //
 
-    const int terrain_size = 100;
+    // yep all these pixels ae the same size
+    double pixel_scaling = 15;
+
+    // based off window size
+    int terrain_size = 1000/pixel_scaling+1;
 
     // Make array for the terrain generator to fill (a texture i guess)
     // Allocating memory for the matrix which will store the altitudes
@@ -97,6 +101,13 @@ int main() {
             .end_height = 1, // halfway
         }
     };
+    struct terrain_layer clouds = {
+        .start_color = {180,218,241,255}, // Deep water
+        .end_color = {255,255,255,255}, // Shallow water
+        .start_height = 0.5, // Minimum value
+        .end_height = 0.803, // Maximum value
+    };
+
 
     pixel* land_pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
     for(int layer=0; layer < sizeof(biome) / sizeof(struct terrain_layer); layer++) {
@@ -132,13 +143,6 @@ int main() {
     printf("There are %i background layer(s)\n",background_layer_amount);
 
     // Convert height map to clouds
-    struct terrain_layer clouds = {
-        .start_color = {180,218,241,50}, // Deep water
-        .end_color = {255,255,255,255}, // Shallow water
-        .start_height = 0.5, // Minimum value
-        .end_height = 1, // Maximum value
-    };
-
     for (int i = 1; i < background_layer_amount; i++) {      
         // Allocate pixel memory and return its pointer
         background_layers[i].pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
@@ -148,8 +152,9 @@ int main() {
         generate_terrain(terrain_size, 0, 0, 100.0, height);
         // Create a cloud pixel map from a height map
         get_terrain_pixels(background_layers[i].pixels, terrain_size, clouds ,height, pixel_format);
-
         SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(pixel), pixel_format_id);
+        // only for color formats without an alpha channel
+        SDL_SetColorKey(surface,SDL_TRUE,SDL_MapRGBA(pixel_format,0,0,0,0));
         background_layers[i].texture = SDL_CreateTextureFromSurface(renderer,surface);
     }
     
@@ -216,9 +221,6 @@ int main() {
     //
     // Loop
     //
-    
-    // yep all these pixels ae the same size
-    double pixel_scaling = 8;
 
     double view_velocity[] = {0,0};
     SDL_Event window_event;
