@@ -2,7 +2,9 @@
 #include<stdio.h>
 #include<math.h>
 
-static int permutation[] = { 151,160,137,91,90,15,					// Hash lookup table as defined by Ken Perlin.  This is a randomly
+int repeat = -1;
+
+int permutation[] = { 151,160,137,91,90,15,					// Hash lookup table as defined by Ken Perlin.  This is a randomly
     131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,	// arranged array of all numbers from 0-255 inclusive.
     190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
     88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
@@ -17,37 +19,46 @@ static int permutation[] = { 151,160,137,91,90,15,					// Hash lookup table as d
     138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
 };
 
-static double grad(int hash, double x, double y, double z) {
+int p[512];
+
+double grad(int hash, double x, double y, double z) {
     int h = hash & 15;									// Take the hashed value and take the first 4 bits of it (15 == 0b1111)
     double u = h < 8 /* 0b1000 */ ? x : y;				// If the most significant bit (MSB) of the hash is 0 then set u = x.  Otherwise y.
-    
     double v;											// In Ken Perlin's original implementation this was another conditional operator (?:).  I
                                                         // expanded it for readability.
-    
     if(h < 4 /* 0b0100 */)								// If the first and second significant bits are 0 set v = y
         v = y;
     else if(h == 12 /* 0b1100 */ || h == 14 /* 0b1110*/)// If the first and second significant bits are 1 set v = x
         v = x;
     else 												// If the first and second significant bits are not equal (0/1, 1/0) set v = z
         v = z;
-    
     return ((h&1) == 0 ? u : -u)+((h&2) == 0 ? v : -v); // Use the last 2 bits to decide if u and v are positive or negative.  Then return their addition.
 }
 
-static double fade(double t) {
+double fade(double t) {
                                                         // Fade function as defined by Ken Perlin.  This eases coordinate values
                                                         // so that they will "ease" towards integral values.  This ends up smoothing
                                                         // the final output.
     return t * t * t * (t * (t * 6 - 15) + 10);			// 6t^5 - 15t^4 + 10t^3
 }
 
-static double lerp(double a, double b, double x) {
+double lerp(double a, double b, double x) {
     return a + x * (b - a);
 }
 
-int p[512];
+int inc(int num) {
+    num++;
+    if (repeat > 0) num %= repeat;
+    return num;
+}
 
-double perlin(double x, double y, double z) {    
+double perlin(double x, double y, double z) {   
+    if(repeat > 0) {									// If we have any repeat on, change the coordinates to their "local" repetitions
+        x = fmod(x,repeat);
+        y = fmod(y,repeat);
+        z = fmod(z,repeat);
+    }
+
     int xi = (int)x & 255;								// Calculate the "unit cube" that the point asked will be located in
     int yi = (int)y & 255;								// The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
     int zi = (int)z & 255;								// plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.
@@ -60,13 +71,13 @@ double perlin(double x, double y, double z) {
                                                         
     int aaa, aba, aab, abb, baa, bba, bab, bbb;
     aaa = p[p[p[    xi ]+    yi ]+    zi ];
-    aba = p[p[p[    xi ]+ yi+1  ]+    zi ];
-    aab = p[p[p[    xi ]+    yi ]+ zi+1  ];
-    abb = p[p[p[    xi ]+ yi+1  ]+ zi+1  ];
-    baa = p[p[p[ zi+1  ]+    yi ]+    zi ];
-    bba = p[p[p[ zi+1  ]+ yi+1  ]+    zi ];
-    bab = p[p[p[ zi+1  ]+    yi ]+ zi+1  ];
-    bbb = p[p[p[ zi+1  ]+ yi+1  ]+ zi+1  ];
+    aba = p[p[p[    xi ]+inc(yi)]+    zi ];
+    aab = p[p[p[    xi ]+    yi ]+inc(zi)];
+    abb = p[p[p[    xi ]+inc(yi)]+inc(zi)];
+    baa = p[p[p[inc(xi)]+    yi ]+    zi ];
+    bba = p[p[p[inc(xi)]+inc(yi)]+    zi ];
+    bab = p[p[p[inc(xi)]+    yi ]+inc(zi)];
+    bbb = p[p[p[inc(xi)]+inc(yi)]+inc(zi)];
 
     double x1, x2, y1, y2;
     x1 = lerp(	grad (aaa, xf  , yf  , zf),				// The gradient function calculates the dot product between a pseudorandom
@@ -75,6 +86,7 @@ double perlin(double x, double y, double z) {
     x2 = lerp(	grad (aba, xf  , yf-1, zf),				// This is all then lerped together as a sort of weighted average based on the faded (u,v,w)
                 grad (bba, xf-1, yf-1, zf),				// values we made earlier.
                     u);
+                    
     y1 = lerp(x1, x2, v);
 
     x1 = lerp(	grad (aab, xf  , yf  , zf-1),
@@ -83,6 +95,7 @@ double perlin(double x, double y, double z) {
     x2 = lerp(	grad (abb, xf  , yf-1, zf-1),
                 grad (bbb, xf-1, yf-1, zf-1),
                 u);
+
     y2 = lerp (x1, x2, v);
     
     return (lerp (y1, y2, w)+1)/2;						// For convenience we bound it to 0 - 1 (theoretical min/max before is -1 - 1)
@@ -118,13 +131,13 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
 
     // Fill array
     for(int x = x_layer; x < x_layer + size; x++) {
-        double x_noise = x/(double)size;
+        double x_noise = x/(double)size*4;
         for(int y = y_layer; y < y_layer + size; y++) {
-            double y_noise = y/(double)size;
+            double y_noise = y/(double)size*4;
             //Adding Altitudes for different frequencies 
-            double height = OctavePerlin(x_noise, y_noise, z_layer, octaves,100.0);   
+            double height = OctavePerlin(x_noise, y_noise, z_layer, octaves,1.0);   
             z[x][y] = height;
-            printf("%f \n",z[x][y]);
+            //printf("%f \n",z[x][y]);
         }
 
     }
