@@ -83,7 +83,7 @@ int main() {
         {
             .start_color = {36,36,85,255}, // Deep water
             .end_color = {36,109,170,255}, // Shallow water
-            .start_height = -3, // Minimum value
+            .start_height = -1, // Minimum value
             .end_height = 0, // Minimum value
         },{
             .start_color = {148,148,123,255}, // low sand
@@ -94,7 +94,7 @@ int main() {
             .start_color = {0,125,0,255}, // low land
             .end_color = {0,218,0,255}, // high land
             .start_height = 0.11, // Minimum value
-            .end_height = 2, // halfway
+            .end_height = 1, // halfway
         }
     };
 
