@@ -111,8 +111,8 @@ double OctavePerlin(double x, double y, double z, int octaves, double persistenc
         
         maxValue += amplitude;
         
-        amplitude *= persistence;
-        frequency *= 2;
+        amplitude = amplitude*0.5;//6persistence;
+        frequency = frequency*1.9;
     }
     
     return total/maxValue;
@@ -121,7 +121,7 @@ double OctavePerlin(double x, double y, double z, int octaves, double persistenc
 int generate_terrain (int size, double x_layer, double y_layer, double z_layer, float **z) {
     // Scaling Factors 
     float scaling[] = {1};
-    int octaves = 2;
+    int octaves = 5;
     float zoom = 5; //Zoom scale, Bigger Zooms in, Smaller Zooms
         
     // A thing that does c things that it needs
