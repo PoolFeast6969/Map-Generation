@@ -108,20 +108,18 @@ double OctavePerlin(double x, double y, double z, int octaves, double persistenc
     double maxValue = 0;			// Used for normalizing result to 0.0 - 1.0
     for(int i=0;i<octaves;i++) {
         total += perlin(x * frequency, y * frequency, z * frequency) * amplitude;
-        
         maxValue += amplitude;
-        
-        amplitude = amplitude*0.5;//6persistence;
+        amplitude = amplitude*0.6;//6persistence;
         frequency = frequency*1.9;
     }
     
     return total/maxValue;
 }
 
-int generate_terrain (int size, double x_layer, double y_layer, double z_layer, float **z) {
+int generate_terrain (int size, double x_layer, double y_layer, double z_layer, float ***z) {
     // Scaling Factors 
     float scaling[] = {1};
-    int octaves = 5;
+    int octaves = 12;
     float zoom = 5; //Zoom scale, Bigger Zooms in, Smaller Zooms
         
     // A thing that does c things that it needs
@@ -136,10 +134,51 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
             double y_noise = y/(double)size*4;
             //Adding Altitudes for different frequencies 
             double height = OctavePerlin(x_noise, y_noise, z_layer, octaves,1.0);   
-            z[x][y] = height;
-            //printf("%f \n",z[x][y]);
-        }
+            z[x][y][0] = height;
 
+            //Defining The 3 points in space 
+            double P2_z;
+            double P3_z;
+            double P1_x = x_noise;
+            double P1_y = y_noise;
+            double P1_z = z[x][y][0];
+
+            double P2_x = (x - 1)/(double)size*4;
+            double P2_y = y_noise;
+
+            double P3_x = x_noise;
+            double P3_y = (y - 1)/(double)size*4;
+
+            if (x == 0){
+                double P2_z = OctavePerlin((x - 1)/(double)size*4, (y)/(double)size*4, z_layer, octaves, 1.0);
+                double P3_z = OctavePerlin((x)/(double)size*4, (y - 1)/(double)size*4, z_layer, octaves, 1.0);
+            } else {                
+                double P2_z = z[x - 1][y][0];
+                double P3_z = z[x][y -1][0];
+            }
+            
+            double vector1_i = P2_x - P1_x;
+            double vector1_j = P2_y - P1_y;
+            double vector1_k = P2_z - P1_z; 
+
+            double vector2_i = P3_x - P1_x;
+            double vector2_j = P3_y - P1_y;
+            double vector2_k = P3_z - P1_z;
+
+            double normal1 = vector1_j*vector2_k - vector1_k*vector2_j;
+            double normal2 = vector1_k*vector2_i - vector1_i*vector2_k;
+            double normal3 = vector1_i*vector2_j - vector1_j*vector2_i;
+
+            double norm = pow(pow(normal1,2) + pow(normal2,2) + pow(normal3,2),0.5);
+
+            double normilized1 = normal1/norm;
+            double normilized2 = normal2/norm;
+            double normilized3 = normal3/norm;
+
+            z[x][y][1] = normilized1;
+            z[x][y][2] = normilized2;
+            z[x][y][3] = normilized3;
+        }
     }
     return 0;
-}
+} 

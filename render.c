@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (int size, double x_layer, double y_layer, double z_layer, float **z);
+int generate_terrain (int size, double x_layer, double y_layer, double z_layer, float ***z);
 
 struct terrain_layer {
     int start_color[4];
@@ -17,15 +17,15 @@ struct terrain_layer {
 
 typedef Uint32 pixel;
 
-int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer layer, float **height, SDL_PixelFormat *pixel_format) {
+int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer layer, float ***height, SDL_PixelFormat *pixel_format) {
     // Convert height map to pixel color map
     for(int x=0; x < pixel_amount; x++) {
         for(int y=0; y < pixel_amount; y++) {
-                if (layer.start_height <= height[x][y] && layer.end_height >= height[x][y]) { // the layer of interest
+                if (layer.start_height <= height[x][y][0] && layer.end_height >= height[x][y][0]) { // the layer of interest
                     float pixel_color[4]; 
                     for(int color=0; color <= 3; color++) {
                         // linearly interpolate between the two end colors
-                        pixel_color[color] = layer.start_color[color] + ((layer.start_color[color] - layer.end_color[color])*(height[x][y]-layer.start_height))/(layer.start_height - layer.end_height);
+                        pixel_color[color] = layer.start_color[color] + ((layer.start_color[color] - layer.end_color[color])*(height[x][y][0]-layer.start_height))/(layer.start_height - layer.end_height);
                     }
                     pixels[x*pixel_amount + y] = SDL_MapRGBA(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2],pixel_color[3]);
             }
@@ -64,13 +64,16 @@ int main() {
 
     const int terrain_size = 100;
 
-    // Make array for the terrain generator to fill (a texture i guess)
+// Make array for the terrain generator to fill (a texture i guess)
     // Allocating memory for the matrix which will store the altitudes
     // Allocate the first dimension as an array of float pointers
-    float **height = malloc(sizeof(float*)*terrain_size);
+    float ***height = malloc(sizeof(float**)*terrain_size);
     // Allocate each float pointer as an array of actual floats
     for (int i=0; i<terrain_size; i++) {
-        height[i] = malloc(sizeof(float)*terrain_size);
+        height[i] = malloc(sizeof(float*)*terrain_size);
+        for (int j=0; j<terrain_size; j++) {
+            height[j] = malloc(sizeof(float)*terrain_size);
+       }
     }
 
     generate_terrain(terrain_size, 0, 0, 3.0, height); // Get a terrain height map
