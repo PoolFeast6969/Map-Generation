@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (int size, double x_layer, double y_layer, double z_layer, float ***z);
+int generate_terrain (int size, double x_layer, double y_layer, double z_layer, double ***z);
 
 struct terrain_layer {
     int start_color[4];
@@ -17,7 +17,7 @@ struct terrain_layer {
 
 typedef Uint32 pixel;
 
-int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer layer, float ***height, SDL_PixelFormat *pixel_format) {
+int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer layer, double ***height, SDL_PixelFormat *pixel_format) {
     // Convert height map to pixel color map
     for(int x=0; x < pixel_amount; x++) {
         for(int y=0; y < pixel_amount; y++) {
@@ -67,12 +67,12 @@ int main() {
 // Make array for the terrain generator to fill (a texture i guess)
     // Allocating memory for the matrix which will store the altitudes
     // Allocate the first dimension as an array of float pointers
-    float ***height = malloc(sizeof(float**)*terrain_size);
+    double ***height = malloc(sizeof(double**)*terrain_size);
     // Allocate each float pointer as an array of actual floats
     for (int i=0; i<terrain_size; i++) {
-        height[i] = malloc(sizeof(float*)*terrain_size);
+        height[i] = malloc(sizeof(double*)*terrain_size);
         for (int j=0; j<terrain_size; j++) {
-            height[j] = malloc(sizeof(float)*terrain_size);
+            height[j] = malloc(sizeof(double)*terrain_size);
        }
     }
 

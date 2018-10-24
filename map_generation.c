@@ -116,7 +116,7 @@ double OctavePerlin(double x, double y, double z, int octaves, double persistenc
     return total/maxValue;
 }
 
-int generate_terrain (int size, double x_layer, double y_layer, double z_layer, float ***z) {
+int generate_terrain (int size, double x_layer, double y_layer, double z_layer, double ***z) {
     // Scaling Factors 
     float scaling[] = {1};
     int octaves = 12;
@@ -133,29 +133,26 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
         for(int y = y_layer; y < y_layer + size; y++) {
             double y_noise = y/(double)size*4;
             //Adding Altitudes for different frequencies 
-            double height = OctavePerlin(x_noise, y_noise, z_layer, octaves,1.0);   
-            z[x][y][0] = height;
+            double height = OctavePerlin(x_noise, y_noise, z_layer, octaves, 1.0);   
+            z[x][y] = height;
 
             //Defining The 3 points in space 
-            double P2_z;
-            double P3_z;
             double P1_x = x_noise;
             double P1_y = y_noise;
             double P1_z = z[x][y][0];
 
             double P2_x = (x - 1)/(double)size*4;
             double P2_y = y_noise;
+            double P2_z = z[x - 1][y][0];
 
             double P3_x = x_noise;
             double P3_y = (y - 1)/(double)size*4;
+            double P3_z = z[x][y -1][0];
 
             if (x == 0){
                 double P2_z = OctavePerlin((x - 1)/(double)size*4, (y)/(double)size*4, z_layer, octaves, 1.0);
                 double P3_z = OctavePerlin((x)/(double)size*4, (y - 1)/(double)size*4, z_layer, octaves, 1.0);
-            } else {                
-                double P2_z = z[x - 1][y][0];
-                double P3_z = z[x][y -1][0];
-            }
+            } 
             
             double vector1_i = P2_x - P1_x;
             double vector1_j = P2_y - P1_y;
