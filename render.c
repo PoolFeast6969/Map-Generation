@@ -71,9 +71,9 @@ int main() {
     // Allocate each float pointer as an array of actual floats
     for (int i=0; i<terrain_size; i++) {
         height[i] = (double**)malloc(sizeof(double*)*terrain_size);
-        //for (int j=0; j<3; j++) {
-        height[i][1] = (double*)malloc(sizeof(double)*terrain_size);
-       //}
+        for (int j=0; j<2; j++){
+            height[i][j] = (double*)malloc(sizeof(double)*terrain_size);
+        }
     }
 
     generate_terrain(terrain_size, 0, 0, 3.0, height, 0.2, 0.1, 0.5); // Get a terrain height map

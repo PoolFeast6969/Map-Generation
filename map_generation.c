@@ -132,6 +132,7 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
         double x_noise = x/(double)size*4;
         for(int y = y_layer; y < y_layer + size; y++) {
             double y_noise = y/(double)size*4;
+            
             //Adding Altitudes for different frequencies 
             double height = OctavePerlin(x_noise, y_noise, z_layer, octaves, 1.0);   
             z[x][y][0] = height;
@@ -183,9 +184,9 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
             double theta = acos((normal_i*ui+normal_j*uj+normal_k*uk)/(norm_normal*norm_light));
 
             //Calculating Alpha value 
-            double alpha = (0.6/165)*abs(theta) - (0.6/165)*15;
+            double alpha = (0.6/2.87979)*abs(theta) - (0.6/2.87979)*0.261799;
 
-            printf("%f \n", theta);
+            printf("%f \n", z[x][y][0]);
 
             z[x][y][1] = alpha;
         }
