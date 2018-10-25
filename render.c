@@ -62,7 +62,12 @@ int main() {
     // Terrain Heights Array
     //
 
-    const int terrain_size = 100;
+        // yep all these pixels ae the same size
+    double pixel_scaling = 15;
+
+    // based off window size
+    int terrain_size = 1000/pixel_scaling+1;
+
 
 // Make array for the terrain generator to fill (a texture i guess)
     // Allocating memory for the matrix which will store the altitudes
@@ -237,9 +242,7 @@ int main() {
     //
     // Loop
     //
-    
-    // yep all these pixels ae the same size
-    double pixel_scaling = 8;
+
 
     double view_velocity[] = {0,0};
     SDL_Event window_event;
