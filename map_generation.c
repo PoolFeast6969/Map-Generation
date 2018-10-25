@@ -116,7 +116,7 @@ double OctavePerlin(double x, double y, double z, int octaves, double persistenc
     return total/maxValue;
 }
 
-int generate_terrain (int size, double x_layer, double y_layer, double z_layer, double ***z) {
+int generate_terrain (int size, double x_layer, double y_layer, double z_layer, double ***z, double ui, double uj, double uk) {
     // Scaling Factors 
     float scaling[] = {1};
     int octaves = 12;
@@ -134,7 +134,11 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
             double y_noise = y/(double)size*4;
             //Adding Altitudes for different frequencies 
             double height = OctavePerlin(x_noise, y_noise, z_layer, octaves, 1.0);   
-            z[x][y] = height;
+            z[x][y][0] = height;
+
+            ///
+            /// Calculating Normal Vector
+            ///
 
             //Defining The 3 points in space 
             double P1_x = x_noise;
@@ -143,17 +147,21 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
 
             double P2_x = (x - 1)/(double)size*4;
             double P2_y = y_noise;
-            double P2_z = z[x - 1][y][0];
+            double P2_z;
 
             double P3_x = x_noise;
             double P3_y = (y - 1)/(double)size*4;
-            double P3_z = z[x][y -1][0];
+            double P3_z;
 
             if (x == 0){
                 double P2_z = OctavePerlin((x - 1)/(double)size*4, (y)/(double)size*4, z_layer, octaves, 1.0);
                 double P3_z = OctavePerlin((x)/(double)size*4, (y - 1)/(double)size*4, z_layer, octaves, 1.0);
-            } 
+            } else {
+                double P2_z = z[x - 1][y][0];
+                double P3_z = z[x][y -1][0];
+            }
             
+            //Creating the 2 vectors from the 3 points 
             double vector1_i = P2_x - P1_x;
             double vector1_j = P2_y - P1_y;
             double vector1_k = P2_z - P1_z; 
@@ -162,19 +170,24 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
             double vector2_j = P3_y - P1_y;
             double vector2_k = P3_z - P1_z;
 
-            double normal1 = vector1_j*vector2_k - vector1_k*vector2_j;
-            double normal2 = vector1_k*vector2_i - vector1_i*vector2_k;
-            double normal3 = vector1_i*vector2_j - vector1_j*vector2_i;
+            //The normal vector is found with cross product
+            double normal_i = vector1_j*vector2_k - vector1_k*vector2_j;
+            double normal_j = vector1_k*vector2_i - vector1_i*vector2_k;
+            double normal_k = vector1_i*vector2_j - vector1_j*vector2_i;
+            
+            //Finding norm which is the vectors magnitude
+            double norm_normal = pow(pow(normal_i,2) + pow(normal_j,2) + pow(normal_k,2),0.5);
+            double norm_light = pow(pow(ui,2) + pow(uj,2) + pow(uk,2),0.5);
 
-            double norm = pow(pow(normal1,2) + pow(normal2,2) + pow(normal3,2),0.5);
+            //Calculating the angle between the normal and light vector 
+            double theta = acos((normal_i*ui+normal_j*uj+normal_k*uk)/(norm_normal*norm_light));
 
-            double normilized1 = normal1/norm;
-            double normilized2 = normal2/norm;
-            double normilized3 = normal3/norm;
+            //Calculating Alpha value 
+            double alpha = (0.6/165)*abs(theta) - (0.6/165)*15;
 
-            z[x][y][1] = normilized1;
-            z[x][y][2] = normilized2;
-            z[x][y][3] = normilized3;
+            printf("%f \n", theta);
+
+            z[x][y][1] = alpha;
         }
     }
     return 0;

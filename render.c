@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (int size, double x_layer, double y_layer, double z_layer, double ***z);
+int generate_terrain (int size, double x_layer, double y_layer, double z_layer, double ***z, double ui, double uj, double uk);
 
 struct terrain_layer {
     int start_color[4];
@@ -67,16 +67,16 @@ int main() {
 // Make array for the terrain generator to fill (a texture i guess)
     // Allocating memory for the matrix which will store the altitudes
     // Allocate the first dimension as an array of float pointers
-    double ***height = malloc(sizeof(double**)*terrain_size);
+    double ***height = (double***)malloc(sizeof(double**)*terrain_size);
     // Allocate each float pointer as an array of actual floats
     for (int i=0; i<terrain_size; i++) {
-        height[i] = malloc(sizeof(double*)*terrain_size);
-        for (int j=0; j<terrain_size; j++) {
-            height[j] = malloc(sizeof(double)*terrain_size);
-       }
+        height[i] = (double**)malloc(sizeof(double*)*terrain_size);
+        //for (int j=0; j<3; j++) {
+        height[i][1] = (double*)malloc(sizeof(double)*terrain_size);
+       //}
     }
 
-    generate_terrain(terrain_size, 0, 0, 3.0, height); // Get a terrain height map
+    generate_terrain(terrain_size, 0, 0, 3.0, height, 0.2, 0.1, 0.5); // Get a terrain height map
 
     //
     // Background
@@ -148,7 +148,7 @@ int main() {
         // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
         for(int p=0;p<terrain_size*terrain_size;p++) background_layers[i].pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
         // Run terrain generation
-        generate_terrain(terrain_size, 0, 0, 100.0, height);
+        generate_terrain(terrain_size, 0, 0, 100.0, height, 1, 1, 0);
         // Create a cloud pixel map from a height map
         get_terrain_pixels(background_layers[i].pixels, terrain_size, clouds ,height, pixel_format);
 
