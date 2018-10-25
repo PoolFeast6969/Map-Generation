@@ -32,14 +32,14 @@ int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer lay
         }
     }
     return 0;
-}
+};
 
 int set_shadow(SDL_Texture* shadow_texture, float lightness) {
     // Create cloud shadows by blacking out the cloud texture
     SDL_SetTextureColorMod(shadow_texture, lightness, lightness, lightness);
     SDL_SetTextureAlphaMod(shadow_texture, lightness);
     return 0;
-}
+};
 
 int main() {
     //
@@ -67,12 +67,12 @@ int main() {
 // Make array for the terrain generator to fill (a texture i guess)
     // Allocating memory for the matrix which will store the altitudes
     // Allocate the first dimension as an array of float pointers
-    double ***height = (double***)malloc(sizeof(double**)*terrain_size);
+    double ***height = malloc(sizeof(double**)*terrain_size);
     // Allocate each float pointer as an array of actual floats
     for (int i=0; i<terrain_size; i++) {
-        height[i] = (double**)malloc(sizeof(double*)*terrain_size);
-        for (int j=0; j<2; j++){
-            height[i][j] = (double*)malloc(sizeof(double)*terrain_size);
+        height[i] = malloc(sizeof(double*)*terrain_size);
+        for (int j=0; j<terrain_size; j++){
+            height[i][j] = malloc(sizeof(double)*3);
         }
     }
 
@@ -128,8 +128,27 @@ int main() {
 
     SDL_FreeSurface(land_surface);
 
+    pixel* rich_pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
+
+    for(int x=0; x < terrain_size; x++) {
+        for(int y=0; y < terrain_size; y++) {
+                rich_pixels[x*terrain_size + y] = SDL_MapRGBA(pixel_format,0,0,0,(int)height[x][y][1]);
+            }
+        }
+    }
+
+    // Put the land image into a texture
+    SDL_Surface *rich_surface = SDL_CreateRGBSurfaceWithFormatFrom(rich_pixels, terrain_size, terrain_size, pixel,terrain_size * sizeof(pixel), pixel_format_id); // Through a surface 
+    
+    // Instantiate the land layer struct
+    struct background_layer big_richs_shadow_relm = {
+        .distance = 500,
+        .texture = SDL_CreateTextureFromSurface(renderer,rich_surface),
+        .pixels = rich_pixels
+    };
+
     // Creates an array of cloud layers with their height and density already set, and the land already in the background
-    struct background_layer background_layers[] = {land,{400,300,}};
+    struct background_layer background_layers[] = {land,big_richs_shadow_relm,{400,300,}};
     
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
     printf("There are %i background layer(s)\n",background_layer_amount);
@@ -142,7 +161,7 @@ int main() {
         .end_height = 1, // Maximum value
     };
 
-    for (int i = 1; i < background_layer_amount; i++) {      
+    for (int i = 2; i < background_layer_amount; i++) {      
         // Allocate pixel memory and return its pointer
         background_layers[i].pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
         // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
