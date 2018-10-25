@@ -32,14 +32,14 @@ int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer lay
         }
     }
     return 0;
-};
+}
 
 int set_shadow(SDL_Texture* shadow_texture, float lightness) {
     // Create cloud shadows by blacking out the cloud texture
     SDL_SetTextureColorMod(shadow_texture, lightness, lightness, lightness);
     SDL_SetTextureAlphaMod(shadow_texture, lightness);
     return 0;
-};
+}
 
 int main() {
     //
@@ -134,11 +134,10 @@ int main() {
         for(int y=0; y < terrain_size; y++) {
                 rich_pixels[x*terrain_size + y] = SDL_MapRGBA(pixel_format,0,0,0,(int)height[x][y][1]);
             }
-        }
     }
 
     // Put the land image into a texture
-    SDL_Surface *rich_surface = SDL_CreateRGBSurfaceWithFormatFrom(rich_pixels, terrain_size, terrain_size, pixel,terrain_size * sizeof(pixel), pixel_format_id); // Through a surface 
+    SDL_Surface *rich_surface = SDL_CreateRGBSurfaceWithFormatFrom(rich_pixels, terrain_size, terrain_size, pixel_format->BitsPerPixel,terrain_size * sizeof(pixel), pixel_format_id); // Through a surface 
     
     // Instantiate the land layer struct
     struct background_layer big_richs_shadow_relm = {
