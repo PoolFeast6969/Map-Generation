@@ -115,7 +115,7 @@ int main() {
     }
 
     // Put the land image into a texture
-    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, 32,terrain_size * sizeof(pixel), pixel_format_id); // Through a surface 
+    SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, pixel_format->BitsPerPixel,terrain_size * sizeof(pixel), pixel_format_id); // Through a surface 
     
     struct background_layer {
         int distance; // Distance from view
