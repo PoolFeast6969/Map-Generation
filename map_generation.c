@@ -127,6 +127,7 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
         p[256+i] = p[i] = permutation[i];
     }
 
+
     // Fill array
     for(int x = x_layer; x < x_layer + size; x++) {
         double x_noise = x/(double)size*4;
@@ -155,11 +156,12 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
             double P3_z;
 
             if (x == 0){
-                double P2_z = OctavePerlin((x - 1)/(double)size*4, (y)/(double)size*4, z_layer, octaves, 1.0);
-                double P3_z = OctavePerlin((x)/(double)size*4, (y - 1)/(double)size*4, z_layer, octaves, 1.0);
+                P2_z = OctavePerlin((x - 1)/(double)size*4, (y)/(double)size*4, z_layer, octaves, 1.0);
+            } else if (y == 0) {    
+                P3_z = OctavePerlin((x)/(double)size*4, (y - 1)/(double)size*4, z_layer, octaves, 1.0);
             } else {
-                double P2_z = z[x - 1][y][0];
-                double P3_z = z[x][y -1][0];
+                P2_z = z[x - 1][y][0];
+                P3_z = z[x][y -1][0];
             }
             
             //Creating the 2 vectors from the 3 points 
@@ -184,7 +186,7 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
             double theta = acos((normal_i*ui+normal_j*uj+normal_k*uk)/(norm_normal*norm_light));
 
             //Calculating Alpha value 
-            double alpha = (0.6/2.87979)*abs(theta) - (0.6/2.87979)*0.261799;
+            double alpha = (255/2.87979)*abs(theta) - (255/2.87979)*0.261799;
 
             printf("%f \n", z[x][y][0]);
 
