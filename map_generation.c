@@ -185,8 +185,16 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
             //Calculating the angle between the normal and light vector 
             double theta = acos((normal_i*ui+normal_j*uj+normal_k*uk)/(norm_normal*norm_light));
 
-            //Calculating Alpha value 
-            double alpha = (255/2.87979)*abs(theta) - (255/2.87979)*0.261799;
+            //Converting angle to between 0 and 180 
+            theta = 180-(theta-180);
+
+            //Calculating Alpha value
+            int angle_min = 0.5;
+            float angle_max = 3.142;
+            int alpha_min = 0;
+            int alpha_max = 255;
+
+            double alpha = ((alpha_max-alpha_min)/(angle_max-angle_min))*theta + alpha_min - ((alpha_max-alpha_min)/(angle_max-angle_min))*angle_min; 
 
             printf("%f \n", z[x][y][0]);
 
