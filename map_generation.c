@@ -109,7 +109,7 @@ double OctavePerlin(double x, double y, double z, int octaves, double persistenc
     for(int i=0;i<octaves;i++) {
         total += perlin(x * frequency, y * frequency, z * frequency) * amplitude;
         maxValue += amplitude;
-        amplitude = amplitude*0.6;//6persistence;
+        amplitude = amplitude*0.4;//6persistence;
         frequency = frequency*1.9;
     }
     
@@ -119,7 +119,7 @@ double OctavePerlin(double x, double y, double z, int octaves, double persistenc
 int generate_terrain (int size, double x_layer, double y_layer, double z_layer, double ***z, double ui, double uj, double uk) {
     // Scaling Factors 
     float scaling[] = {1};
-    int octaves = 12;
+    int octaves = 10;
     float zoom = 5; //Zoom scale, Bigger Zooms in, Smaller Zooms
         
     // A thing that does c things that it needs
@@ -189,14 +189,12 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
             theta = 180-(theta-180);
 
             //Calculating Alpha value
-            int angle_min = 0.5;
-            float angle_max = 3.142;
+            float angle_min = 0;
+            float angle_max = 3.15;
             int alpha_min = 0;
             int alpha_max = 255;
 
             double alpha = ((alpha_max-alpha_min)/(angle_max-angle_min))*theta + alpha_min - ((alpha_max-alpha_min)/(angle_max-angle_min))*angle_min; 
-
-            printf("%f \n", z[x][y][0]);
 
             z[x][y][1] = alpha;
         }

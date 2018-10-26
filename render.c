@@ -63,10 +63,10 @@ int main() {
     //
 
         // yep all these pixels ae the same size
-    double pixel_scaling = 10;
+    double pixel_scaling = 5;
 
     // based off window size
-    int terrain_size = 1000/pixel_scaling+1;
+    int terrain_size = 2000/pixel_scaling+1;
 
 
 // Make array for the terrain generator to fill (a texture i guess)
@@ -81,7 +81,7 @@ int main() {
         }
     }
 
-    generate_terrain(terrain_size, 0, 0, 3.0, height, 0.2, -0.2, -0.5); // Get a terrain height map
+    generate_terrain(terrain_size, 0, 0, 3.0, height, 0.5, 0, -0.2); // Get a terrain height map
 
     //
     // Background
