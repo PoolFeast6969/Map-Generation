@@ -4,7 +4,8 @@
 
 int repeat = -1;
 
-int permutation[] = { 151,160,137,91,90,15,					// Hash lookup table as defined by Ken Perlin.  This is a randomly
+//Big Kens Big Array
+int permutation[] = { 151,160,137,91,90,15,					                        // Hash lookup table as defined by Ken Perlin.  This is a randomly
     131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,	// arranged array of all numbers from 0-255 inclusive.
     190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
     88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
@@ -108,20 +109,18 @@ double OctavePerlin(double x, double y, double z, int octaves, double persistenc
     double maxValue = 0;			// Used for normalizing result to 0.0 - 1.0
     for(int i=0;i<octaves;i++) {
         total += perlin(x * frequency, y * frequency, z * frequency) * amplitude;
-        
         maxValue += amplitude;
-        
-        amplitude *= persistence;
-        frequency *= 2;
+        amplitude = amplitude*0.4;//6persistence;
+        frequency = frequency*1.9;
     }
     
     return total/maxValue;
 }
 
-int generate_terrain (int size, double x_layer, double y_layer, double z_layer, float **z) {
+int generate_terrain (int size, double x_layer, double y_layer, double z_layer, double ***z, double ui, double uj, double uk) {
     // Scaling Factors 
     float scaling[] = {1};
-    int octaves = 2;
+    int octaves = 10;
     float zoom = 5; //Zoom scale, Bigger Zooms in, Smaller Zooms
         
     // A thing that does c things that it needs
@@ -134,12 +133,71 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
         double x_noise = x/(double)size*4;
         for(int y = y_layer; y < y_layer + size; y++) {
             double y_noise = y/(double)size*4;
+            
             //Adding Altitudes for different frequencies 
-            double height = OctavePerlin(x_noise, y_noise, z_layer, octaves,1.0);   
-            z[x][y] = height;
-            //printf("%f \n",z[x][y]);
-        }
+            double height = OctavePerlin(x_noise, y_noise, z_layer, octaves, 1.0);   
+            z[x][y][0] = height;
 
+            ///
+            /// Normal Shadowing 
+            ///
+
+            //Defining The 3 points in space 
+            double P1_x = x_noise;
+            double P1_y = y_noise;
+            double P1_z = z[x][y][0];
+
+            double P2_x = (x - 1)/(double)size*4;
+            double P2_y = y_noise;
+            double P2_z;
+
+            double P3_x = x_noise;
+            double P3_y = (y - 1)/(double)size*4;
+            double P3_z;
+
+            if (x == 0){
+                P2_z = OctavePerlin((x - 1)/(double)size*4, (y)/(double)size*4, z_layer, octaves, 1.0);
+            } else if (y == 0) {    
+                P3_z = OctavePerlin((x)/(double)size*4, (y - 1)/(double)size*4, z_layer, octaves, 1.0);
+            } else {
+                P2_z = z[x - 1][y][0];
+                P3_z = z[x][y -1][0];
+            }
+            
+            //Creating the 2 vectors from the 3 points 
+            double vector1_i = P2_x - P1_x;
+            double vector1_j = P2_y - P1_y;
+            double vector1_k = P2_z - P1_z; 
+
+            double vector2_i = P3_x - P1_x;
+            double vector2_j = P3_y - P1_y;
+            double vector2_k = P3_z - P1_z;
+
+            //The normal vector is found with cross product
+            double normal_i = vector1_j*vector2_k - vector1_k*vector2_j;
+            double normal_j = vector1_k*vector2_i - vector1_i*vector2_k;
+            double normal_k = vector1_i*vector2_j - vector1_j*vector2_i;
+            
+            //Finding norm which is the vectors magnitude
+            double norm_normal = pow(pow(normal_i,2) + pow(normal_j,2) + pow(normal_k,2),0.5);
+            double norm_light = pow(pow(ui,2) + pow(uj,2) + pow(uk,2),0.5);
+
+            //Calculating the angle between the normal and light vector 
+            double theta = acos((normal_i*ui+normal_j*uj+normal_k*uk)/(norm_normal*norm_light));
+
+            //Converting angle to between 0 and 180 
+            theta = 3.142-(theta-3.142);
+
+            //Calculating Alpha value
+            float angle_min = 0;
+            float angle_max = 3.142;
+            int alpha_min = 0;
+            int alpha_max = 255;
+
+            double alpha = alpha_min + ((alpha_min - alpha_max)*(theta-angle_min))/(angle_min - angle_max); //((alpha_max-alpha_min)/(angle_max-angle_min))*theta + alpha_min - ((alpha_max-alpha_min)/(angle_max-angle_min))*angle_min; 
+            
+            z[x][y][1] = alpha;
+        }
     }
     return 0;
-}
+} 
