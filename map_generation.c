@@ -117,7 +117,7 @@ double OctavePerlin(double x, double y, double z, int octaves, double persistenc
     return total/maxValue;
 }
 
-int generate_terrain (int size, double x_layer, double y_layer, double z_layer, double ***z, double ui, double uj, double uk) {
+int generate_terrain (int size, float x_layer, float y_layer, float z_layer, float ***z, float *light_dir) {
     // Scaling Factors 
     float scaling[] = {1};
     int octaves = 10;
@@ -180,10 +180,10 @@ int generate_terrain (int size, double x_layer, double y_layer, double z_layer, 
             
             //Finding norm which is the vectors magnitude
             double norm_normal = pow(pow(normal_i,2) + pow(normal_j,2) + pow(normal_k,2),0.5);
-            double norm_light = pow(pow(ui,2) + pow(uj,2) + pow(uk,2),0.5);
+            double norm_light = pow(pow(light_dir[0],2) + pow(light_dir[1],2) + pow(light_dir[2],2),0.5);
 
             //Calculating the angle between the normal and light vector 
-            double theta = acos((normal_i*ui+normal_j*uj+normal_k*uk)/(norm_normal*norm_light));
+            double theta = acos((normal_i*light_dir[0]+normal_j*light_dir[1]+normal_k*light_dir[2])/(norm_normal*norm_light));
 
             //Converting angle to between 0 and 180 
             theta = 3.142-(theta-3.142);
