@@ -5,8 +5,8 @@
 
 #include "SDL2/SDL.h"
 
-// The compliler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (int size, double x_layer, double y_layer, double z_layer, float **z);
+// The compiler needs to know that this function exists before it calls it, or something like that
+int generate_terrain (int , double , double , double , double, float **);
 
 struct terrain_layer {
     int start_color[4];
@@ -15,7 +15,7 @@ struct terrain_layer {
     float start_height;
 };
 
-typedef Uint32 pixel;
+typedef Uint8 pixel;
 
 int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer layer, float **height, SDL_PixelFormat *pixel_format) {
     // Convert height map to pixel color map
@@ -55,7 +55,8 @@ int main() {
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
     // Set pixel format to make the textures in
-    Uint32 pixel_format_id = SDL_PIXELFORMAT_RGBA32; // should be able to do whatever you want here, just remember to change typedef pixel
+    //Uint32 pixel_format_id = SDL_PIXELFORMAT_RGBA32;
+    Uint32 pixel_format_id = SDL_PIXELFORMAT_RGB332; // should be able to do whatever you want here, just remember to change typedef pixel
     SDL_PixelFormat *pixel_format = SDL_AllocFormat(pixel_format_id); // Get the actual format object from its ID
     
     //
@@ -77,7 +78,7 @@ int main() {
         height[i] = malloc(sizeof(float)*terrain_size);
     }
 
-    generate_terrain(terrain_size, 0, 0, 3.0, height); // Get a terrain height map
+    generate_terrain(terrain_size, 0, 0, 3.0, 1, height); // Get a terrain height map
 
     //
     // Background
@@ -149,13 +150,21 @@ int main() {
         // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
         for(int p=0;p<terrain_size*terrain_size;p++) background_layers[i].pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
         // Run terrain generation
-        generate_terrain(terrain_size, 0, 0, 100.0, height);
+        generate_terrain(terrain_size, 0, 0, 100.0, 3, height);
         // Create a cloud pixel map from a height map
         get_terrain_pixels(background_layers[i].pixels, terrain_size, clouds ,height, pixel_format);
         SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(pixel), pixel_format_id);
         // only for color formats without an alpha channel
-        SDL_SetColorKey(surface,SDL_TRUE,SDL_MapRGBA(pixel_format,0,0,0,0));
+        if (!SDL_ISPIXELFORMAT_ALPHA(pixel_format_id)) {SDL_SetColorKey(surface,SDL_TRUE,SDL_MapRGBA(pixel_format,0,0,0,0));}
+        // send to gpu
         background_layers[i].texture = SDL_CreateTextureFromSurface(renderer,surface);
+        // This saves memory?
+        SDL_FreeSurface(surface);
+
+        // Get shadows for every layer above this one
+        for (int j = i - 1; j > 0; j--) {
+            
+        }
     }
     
     //
@@ -207,7 +216,7 @@ int main() {
             SDL_ConvertSurface(sprites[i].surface, pixel_format, 0);
             // Create texture
             sprites[i].texture = SDL_CreateTextureFromSurface(renderer, sprites[i].surface);
-            // Delete surface or something
+            // Delete surface or something?
             sprites[i].number = i + 1; 
 
             if (i == sprite_middle){
@@ -297,7 +306,7 @@ int main() {
             }
 
             SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
-            SDL_Rect new_position = {background_layers[i].position[0], background_layers[i].position[1], terrain_size*pixel_scaling, terrain_size*pixel_scaling};
+            SDL_Rect new_position = {background_layers[i].position[0], background_layers[i].position[1], terrain_size*pixel_scaling*0.5, terrain_size*pixel_scaling*0.5};
             // Add to frame
             SDL_RenderCopy(renderer,background_layers[i].texture,NULL,&new_position);
         }
