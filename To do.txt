@@ -8,5 +8,6 @@ Bearings (Rotate the map when banking)
 Roads and buildinigs 
 Farmland
 Biomes
+Run-time map calculation (figuring what parts of the array needs to be calculated and what have already been calculated)
 
 Add easter egg where there is a text that if pasted into next and aspect ratio changed will create a image (using github ascii art generator)
