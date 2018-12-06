@@ -120,8 +120,7 @@ double OctavePerlin(double x, double y, double z, int octaves, double persistenc
 
 int generate_terrain (int point_amount, double x_start, double y_start, double z_layer, double region_size, float **z) {
     int octaves = 2;
-    float zoom = 4; //Zoom scale, Bigger Zooms in, Smaller Zooms
-        
+
     // A thing that does c things that it needs
     for (int i = 0; i < 256; i++) {
         p[256+i] = p[i] = permutation[i];
@@ -133,8 +132,8 @@ int generate_terrain (int point_amount, double x_start, double y_start, double z
         for(int y = 0; y < point_amount; y++) {
             double y_noise = y_start + region_size/point_amount * y;
             //Adding Altitudes for different frequencies 
-            z[x][y] = OctavePerlin(x_noise, y_noise, 3.0, octaves,2.0);   
-            //printf("%f \n",z[x][y]);
+            z[x][y] = OctavePerlin(x_noise, y_noise, z_layer, octaves,1.0);   
+            //printf("%i \n",y);
         }
 
     }

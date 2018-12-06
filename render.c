@@ -64,7 +64,7 @@ int main() {
     //
 
     // yep all these pixels ae the same size
-    double pixel_scaling = 15;
+    double pixel_scaling = 10;
 
     // based off window size
     int terrain_size = 1000/pixel_scaling+1;
@@ -109,6 +109,12 @@ int main() {
         .end_height = 0.803, // Maximum value
     };
 
+    struct terrain_layer cloud_shadows = {
+        .start_color = {0,0,0,255}, // Deep water
+        .end_color = {0,0,0,100}, // Shallow water
+        .start_height = 0.5, // Minimum value
+        .end_height = 0.803, // Maximum value
+    };
 
     pixel* land_pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
     for(int layer=0; layer < sizeof(biome) / sizeof(struct terrain_layer); layer++) {
@@ -119,18 +125,18 @@ int main() {
     SDL_Surface *land_surface = SDL_CreateRGBSurfaceWithFormatFrom(land_pixels, terrain_size, terrain_size, pixel_format->BitsPerPixel,terrain_size * sizeof(pixel), pixel_format_id); // Through a surface 
     
     struct background_layer {
-        int distance; // Distance from view
-        double density; // Cloud thickness
-        int shadow_offset[2];
+        double distance; // Distance from view
+        double z_layer;
         double position[2];
         double last_update_time[2]; // When each position was last updated
         SDL_Texture* texture; // Texture in video memory
         pixel* pixels; // Pixel data in normal memory
+        SDL_Texture** shadow_textures; // shadows cast on this layer
     };
 
     // Instantiate the land layer struct
     struct background_layer land = {
-        .distance = 500,
+        .distance = 5,
         .texture = SDL_CreateTextureFromSurface(renderer,land_surface),
         .pixels = land_pixels
     };
@@ -138,33 +144,53 @@ int main() {
     SDL_FreeSurface(land_surface);
 
     // Creates an array of cloud layers with their height and density already set, and the land already in the background
-    struct background_layer background_layers[] = {land,{400,300,}};
-    
+    struct background_layer background_layers[] = {land,{3,484},{2,200}};
+            
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
     printf("There are %i background layer(s)\n",background_layer_amount);
 
     // Convert height map to clouds
-    for (int i = 1; i < background_layer_amount; i++) {      
-        // Allocate pixel memory and return its pointer
-        background_layers[i].pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
-        // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
-        for(int p=0;p<terrain_size*terrain_size;p++) background_layers[i].pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
-        // Run terrain generation
-        generate_terrain(terrain_size, 0, 0, 100.0, 3, height);
-        // Create a cloud pixel map from a height map
-        get_terrain_pixels(background_layers[i].pixels, terrain_size, clouds ,height, pixel_format);
-        SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(pixel), pixel_format_id);
-        // only for color formats without an alpha channel
-        if (!SDL_ISPIXELFORMAT_ALPHA(pixel_format_id)) {SDL_SetColorKey(surface,SDL_TRUE,SDL_MapRGBA(pixel_format,0,0,0,0));}
-        // send to gpu
-        background_layers[i].texture = SDL_CreateTextureFromSurface(renderer,surface);
-        // This saves memory?
-        SDL_FreeSurface(surface);
-
-        // Get shadows for every layer above this one
-        for (int j = i - 1; j > 0; j--) {
-            
+    for (int i = 0; i < background_layer_amount; i++) {      
+        if (i > 0) { // don't touch the land
+            // Allocate pixel memory and return its pointer
+            background_layers[i].pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
+            // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
+            for(int p=0;p<terrain_size*terrain_size;p++) background_layers[i].pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
+            // Run terrain generation
+            generate_terrain(terrain_size, 0, 0, background_layers[i].z_layer, 1, height);
+            // Create a cloud pixel map from a height map
+            get_terrain_pixels(background_layers[i].pixels, terrain_size, clouds ,height, pixel_format);
+            SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(background_layers[i].pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(pixel), pixel_format_id);
+            // only for color formats without an alpha channel
+            if (!SDL_ISPIXELFORMAT_ALPHA(pixel_format_id)) {SDL_SetColorKey(surface,SDL_TRUE,SDL_MapRGBA(pixel_format,0,0,0,0));}
+            // send to gpu
+            background_layers[i].texture = SDL_CreateTextureFromSurface(renderer,surface);
+            // This saves memory?
+            SDL_FreeSurface(surface);
         }
+        // Get shadows for every layer above this one
+        SDL_Texture* shadow_textures[background_layer_amount - i - 1];
+        background_layers[i].shadow_textures = shadow_textures;
+        for (int j = i + 1; j < background_layer_amount; j++) {
+            // Allocate pixel memory and return its pointer
+            pixel* pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
+            // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
+            for(int p=0;p<terrain_size*terrain_size;p++) pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
+            // Run terrain generation
+            generate_terrain(terrain_size, 0, 0, background_layers[j].z_layer, 1 + background_layers[i].distance - background_layers[j].distance, height);
+            // Create a cloud pixel map from a height map
+            get_terrain_pixels(pixels, terrain_size, cloud_shadows ,height, pixel_format);
+            SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormatFrom(pixels, terrain_size, terrain_size, 0,terrain_size * sizeof(pixel), pixel_format_id);
+            // only for color formats without an alpha channel
+            if (!SDL_ISPIXELFORMAT_ALPHA(pixel_format_id)) {SDL_SetColorKey(surface,SDL_TRUE,SDL_MapRGBA(pixel_format,0,0,0,0));}
+            // send to gpu
+            background_layers[i].shadow_textures[j-i-1] =  SDL_CreateTextureFromSurface(renderer,surface);
+            // This saves memory?
+            SDL_FreeSurface(surface);
+        }
+
+        // TODO Combine shadow and clouds for each layer using the renderer
+
     }
     
     //
@@ -182,7 +208,7 @@ int main() {
         int size;
         int render; // 1 to render and 0 to not. 
         int number; 
-        char filename[];
+        char filename[50]; // hopefully you don't need more than 50 characters ey?
     };
 
     struct character {
@@ -305,8 +331,8 @@ int main() {
                 background_layers[i].last_update_time[a] = SDL_GetTicks();
             }
 
-            SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
-            SDL_Rect new_position = {background_layers[i].position[0], background_layers[i].position[1], terrain_size*pixel_scaling*0.5, terrain_size*pixel_scaling*0.5};
+            //SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
+            SDL_Rect new_position = {background_layers[i].position[0], background_layers[i].position[1], terrain_size*pixel_scaling, terrain_size*pixel_scaling};
             // Add to frame
             SDL_RenderCopy(renderer,background_layers[i].texture,NULL,&new_position);
         }
