@@ -23,7 +23,7 @@ float camera_pos[3] = {0, 0, 0};
 float camera_ang[3] = {0, 0, 0};
 float light_dir[3] = {0.5, 0, -0.2};
 int camera_angle = 90; 
-int z_max_distance = 300;
+int z_max_distance = 350;
 int z_min_distance = 1;
 
 //Loop conditionc
@@ -71,11 +71,16 @@ int main() {
     //The transition point from cone to circle 
     float cone_distance = cos(view_angle/2)*z_max_distance;
 
+    float projected[2];
+
     float view_left[2] = {0,0};
     float view_right[2] = {0,0};
 
     float x_step = 0;
     float y_step = 0;
+
+    float x_dist;
+    float height_on_screen;
 
     float projection_matrix[4][4] = {
         {aspect_ratio*feild_of_view, 0,             0,           0},
@@ -136,22 +141,28 @@ int main() {
         float dz = 1;
 
         while(i < z_max_distance){
-            //if (run == 1){
-                //Determin what part of the height  map needs to be drawn
-                float view_left[2] = {-tan(view_angle/2)*cos(camera_ang[0])*i -tan(view_angle/2)*sin(camera_ang[0])*i  + screen_width/2 + camera_pos[0], 
-                                    i*sin(camera_ang[0])  -i*cos(camera_ang[0])  + screen_height/2 + camera_pos[1]};
-            
-                float view_right[2] = {tan(view_angle/2)*cos(camera_ang[0])*i   -tan(view_angle/2)*sin(camera_ang[0])*i + screen_width/2 + camera_pos[0], 
-                                    -i*sin(camera_ang[0])  -i*cos(camera_ang[0]) + screen_height/2 + camera_pos[1]};                     
+            //Cone Shaped Section
+            if (cone_distance > i){
+                view_left[0] = -tan(view_angle/2)*cos(camera_ang[0])*i -tan(view_angle/2)*sin(camera_ang[0])*i + screen_width/2 + camera_pos[0]; 
+                view_right[0] = tan(view_angle/2)*cos(camera_ang[0])*i -tan(view_angle/2)*sin(camera_ang[0])*i + screen_width/2 + camera_pos[0];  
 
-                //The step size 
-                float x_step = (view_right[0] - view_left[0])/screen_width; 
-                float y_step = (view_right[1] - view_left[1])/screen_width;
-            //}
+            //Pizza Crust Shaped Section          
+            } else {
+                x_dist = sqrt(pow(z_max_distance,2) - pow(i,2));
+                view_left[0]  = -x_dist*cos(camera_ang[0]) - x_dist*sin(camera_ang[0])+ screen_width/2 + camera_pos[0];
+                view_right[0] = x_dist*cos(camera_ang[0])  - x_dist*sin(camera_ang[0])+ screen_width/2 + camera_pos[0];
+            }
+
+            view_left[1] =   i*sin(camera_ang[0]) -i*cos(camera_ang[0]) + screen_height/2 + camera_pos[1];
+            view_right[1] = -i*sin(camera_ang[0]) -i*cos(camera_ang[0]) + screen_height/2 + camera_pos[1];  
+
+            //The step size 
+            x_step = (view_right[0] - view_left[0])/screen_width; 
+            y_step = (view_right[1] - view_left[1])/screen_width;  
 
             for(int j = 0; j < screen_width; j++){
 
-                float height_on_screen = (camera_pos[2] + 580 - height[(int) view_left[0]][(int) view_left[1]][0]*1000) / i * 240 + screen_height/3;
+                height_on_screen = (camera_pos[2] + 580 - height[(int) view_left[0]][(int) view_left[1]][0]*1000) / i*200 + screen_height/3;
 
                 //Drawing Each Dot
                 if (height_on_screen < y_buffer[j]){
@@ -184,7 +195,7 @@ int main() {
             dz += 0.01; 
         }
 
-        camera_ang[0] += 0.05;
+        camera_ang[0] += 0.02;
         //camera_pos[0] += 1;
 
         //Render the screen
@@ -381,3 +392,13 @@ int main() {
     return 0;
 }
 */
+
+                //Projection
+                //projected[0] = view_left[0]*projection_matrix[0][0] + view_left[1]*projection_matrix[1][0] + height[(int) view_left[0]][(int) view_left[1]][0]*projection_matrix[2][0] + projection_matrix[3][0];
+                //projected[1] = view_left[0]*projection_matrix[0][3] + view_left[1]*projection_matrix[1][3] + height[(int) view_left[0]][(int) view_left[1]][0]*projection_matrix[2][3] + projection_matrix[3][3];
+
+                //if (projected[1] != 0){
+                //    projected[0] /= projected[1];
+                //}
+
+                //float height_on_screen = projected[0] - 100;
