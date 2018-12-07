@@ -21,15 +21,15 @@ int permutation[] = { 151,160,137,91,90,15,					// Hash lookup table as defined 
 
 int p[512];
 
-double grad(int hash, double x, double y, double z) {
+double grad(int hash, double x_index, double y_index, double z) {
     int h = hash & 15;									// Take the hashed value and take the first 4 bits of it (15 == 0b1111)
-    double u = h < 8 /* 0b1000 */ ? x : y;				// If the most significant bit (MSB) of the hash is 0 then set u = x.  Otherwise y.
+    double u = h < 8 /* 0b1000 */ ? x_index : y_index;				// If the most significant bit (MSB) of the hash is 0 then set u = x_index.  Otherwise y_index.
     double v;											// In Ken Perlin's original implementation this was another conditional operator (?:).  I
                                                         // expanded it for readability.
-    if(h < 4 /* 0b0100 */)								// If the first and second significant bits are 0 set v = y
-        v = y;
-    else if(h == 12 /* 0b1100 */ || h == 14 /* 0b1110*/)// If the first and second significant bits are 1 set v = x
-        v = x;
+    if(h < 4 /* 0b0100 */)								// If the first and second significant bits are 0 set v = y_index
+        v = y_index;
+    else if(h == 12 /* 0b1100 */ || h == 14 /* 0b1110*/)// If the first and second significant bits are 1 set v = x_index
+        v = x_index;
     else 												// If the first and second significant bits are not equal (0/1, 1/0) set v = z
         v = z;
     return ((h&1) == 0 ? u : -u)+((h&2) == 0 ? v : -v); // Use the last 2 bits to decide if u and v are positive or negative.  Then return their addition.
@@ -42,8 +42,8 @@ double fade(double t) {
     return t * t * t * (t * (t * 6 - 15) + 10);			// 6t^5 - 15t^4 + 10t^3
 }
 
-double lerp(double a, double b, double x) {
-    return a + x * (b - a);
+double lerp(double a, double b, double x_index) {
+    return a + x_index * (b - a);
 }
 
 int inc(int num) {
@@ -52,18 +52,18 @@ int inc(int num) {
     return num;
 }
 
-double perlin(double x, double y, double z) {   
+double perlin(double x_index, double y_index, double z) {   
     if(repeat > 0) {									// If we have any repeat on, change the coordinates to their "local" repetitions
-        x = fmod(x,repeat);
-        y = fmod(y,repeat);
+        x_index = fmod(x_index,repeat);
+        y_index = fmod(y_index,repeat);
         z = fmod(z,repeat);
     }
 
-    int xi = (int)x & 255;								// Calculate the "unit cube" that the point asked will be located in
-    int yi = (int)y & 255;								// The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
+    int xi = (int)x_index & 255;								// Calculate the "unit cube" that the point asked will be located in
+    int yi = (int)y_index & 255;								// The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
     int zi = (int)z & 255;								// plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.
-    double xf = x-(int)x;								// We also fade the location to smooth the result.
-    double yf = y-(int)y;
+    double xf = x_index-(int)x_index;								// We also fade the location to smooth the result.
+    double yf = y_index-(int)y_index;
     double zf = z-(int)z;
     double u = fade(xf);
     double v = fade(yf);
@@ -101,13 +101,13 @@ double perlin(double x, double y, double z) {
     return (lerp (y1, y2, w)+1)/2;						// For convenience we bound it to 0 - 1 (theoretical min/max before is -1 - 1)
 }
 
-double OctavePerlin(double x, double y, double z, int octaves, double persistence) {
+double OctavePerlin(double x_index, double y_index, double z, int octaves, double persistence) {
     double total = 0;
     double frequency = 1;
     double amplitude = 1;
     double maxValue = 0;			// Used for normalizing result to 0.0 - 1.0
     for(int i=0;i<octaves;i++) {
-        total += perlin(x * frequency, y * frequency, z * frequency) * amplitude;
+        total += perlin(x_index * frequency, y_index * frequency, z * frequency) * amplitude;
         
         maxValue += amplitude;
         
@@ -127,13 +127,13 @@ int generate_terrain (int point_amount, double x_start, double y_start, double z
     }
 
     // Fill array
-    for(int x = 0; x < point_amount; x++) {
-        double x_noise = x_start + region_size/point_amount * x;
-        for(int y = 0; y < point_amount; y++) {
-            double y_noise = y_start + region_size/point_amount * y;
+    for(int x_index = 0; x_index < point_amount; x_index++) {
+        double x_noise = x_start + region_size/point_amount * x_index;
+        for(int y_index = 0; y_index < point_amount; y_index++) {
+            double y_noise = y_start + region_size/point_amount * y_index;
             //Adding Altitudes for different frequencies 
-            z[x][y] = OctavePerlin(x_noise, y_noise, z_layer, octaves,1.0);   
-            //printf("%i \n",y);
+            z[x_index][y_index] = OctavePerlin(x_noise, y_noise, z_layer, octaves,1.0);   
+            //printf("%i \n",y_index);
         }
 
     }
