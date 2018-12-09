@@ -33,7 +33,7 @@ int run = 1;
 typedef Uint32 pixel;
 
 //Function Decleration
-int generate_terrain(int size, float x_layer, float y_layer, float z_layer, float ***z, float *light_dir);
+int generate_terrain(int size, float x_layer, float y_layer, float z_layer, float region_size, float ***z, float *light_dir);
 
 //Define the Colours of each pixel
 int get_terrain_colour(pixel *pixel_color, struct terrain_layer layer, float height) {
@@ -47,6 +47,52 @@ int get_terrain_colour(pixel *pixel_color, struct terrain_layer layer, float hei
     //End the function
     return 0;
 }
+
+/*/Update the terrain without recalculating it all
+int update_terrain (float x_old, float y_old, float x_new, float y_new, float ***height, int terrain_size){
+    float dx = x_old - x_new;
+    float dy = y_old - y_new;
+
+    int dx_index = ;
+    int dy_index = ;
+
+    //Shifting the exisitng z heights accoardingly
+    for(int i = 0; i < terrain_size; i++){
+        for(int j = 0; j < terrain_size; j++){
+
+            //Within X Bounds
+            if (i - abs(dx_index) > 0 && i + abs(dx_index) < terrain_size) {
+
+                //Within Y Bounds 
+                if (j - abs(dy_index) > 0 && j + abs(dy_index) < terrain_size) {
+                    
+                    //Shifting the position
+                    height[i][j][0] = height[i + (int) dx_index][j + (int) dy_index][0];
+
+                }
+            }
+        }
+    }
+
+    //Calculating the required new positiosn 
+    for (int i = 0; i < abs(dx_index); i++){
+        for (int j = 0; j < abs(dy_index); j++){
+
+            if ( dx_index < 0 && dy_index < 0 ) {
+                height[i][j][0] = 
+
+            } else if ( dx_index > 0 && dy_index < 0 ) {
+
+            } else if ( dx_index < 0 && dy_index > 0 ) {
+
+            } else {
+
+            }
+
+        }
+    }
+    return 0;
+}/*/
 
 //Main Function 
 int main() {
@@ -119,7 +165,7 @@ int main() {
     }
 
     //Generate the Map
-    generate_terrain(terrain_size, camera_pos[0], camera_pos[1], 1.5, height, light_dir);
+    generate_terrain(terrain_size, camera_pos[0], camera_pos[1], 1.5, 1, height, light_dir);
 
     while(run == 1){
         while (SDL_PollEvent(&window_event)){
@@ -196,7 +242,7 @@ int main() {
         }
 
         camera_ang[0] += 0.02;
-        //camera_pos[0] += 1;
+        //camera_pos[2] += 1;
 
         //Render the screen
         SDL_RenderPresent(renderer); 

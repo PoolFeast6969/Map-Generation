@@ -4,8 +4,7 @@
 
 int repeat = -1;
 
-//Big Kens Big Array
-int permutation[] = { 151,160,137,91,90,15,					                        // Hash lookup table as defined by Ken Perlin.  This is a randomly
+int permutation[] = { 151,160,137,91,90,15,					// Hash lookup table as defined by Ken Perlin.  This is a randomly
     131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,	// arranged array of all numbers from 0-255 inclusive.
     190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
     88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
@@ -22,15 +21,15 @@ int permutation[] = { 151,160,137,91,90,15,					                        // Hash 
 
 int p[512];
 
-double grad(int hash, double x, double y, double z) {
+double grad(int hash, double x_index, double y_index, double z) {
     int h = hash & 15;									// Take the hashed value and take the first 4 bits of it (15 == 0b1111)
-    double u = h < 8 /* 0b1000 */ ? x : y;				// If the most significant bit (MSB) of the hash is 0 then set u = x.  Otherwise y.
+    double u = h < 8 /* 0b1000 */ ? x_index : y_index;				// If the most significant bit (MSB) of the hash is 0 then set u = x_index.  Otherwise y_index.
     double v;											// In Ken Perlin's original implementation this was another conditional operator (?:).  I
                                                         // expanded it for readability.
-    if(h < 4 /* 0b0100 */)								// If the first and second significant bits are 0 set v = y
-        v = y;
-    else if(h == 12 /* 0b1100 */ || h == 14 /* 0b1110*/)// If the first and second significant bits are 1 set v = x
-        v = x;
+    if(h < 4 /* 0b0100 */)								// If the first and second significant bits are 0 set v = y_index
+        v = y_index;
+    else if(h == 12 /* 0b1100 */ || h == 14 /* 0b1110*/)// If the first and second significant bits are 1 set v = x_index
+        v = x_index;
     else 												// If the first and second significant bits are not equal (0/1, 1/0) set v = z
         v = z;
     return ((h&1) == 0 ? u : -u)+((h&2) == 0 ? v : -v); // Use the last 2 bits to decide if u and v are positive or negative.  Then return their addition.
@@ -43,8 +42,8 @@ double fade(double t) {
     return t * t * t * (t * (t * 6 - 15) + 10);			// 6t^5 - 15t^4 + 10t^3
 }
 
-double lerp(double a, double b, double x) {
-    return a + x * (b - a);
+double lerp(double a, double b, double x_index) {
+    return a + x_index * (b - a);
 }
 
 int inc(int num) {
@@ -53,18 +52,18 @@ int inc(int num) {
     return num;
 }
 
-double perlin(double x, double y, double z) {   
+double perlin(double x_index, double y_index, double z) {   
     if(repeat > 0) {									// If we have any repeat on, change the coordinates to their "local" repetitions
-        x = fmod(x,repeat);
-        y = fmod(y,repeat);
+        x_index = fmod(x_index,repeat);
+        y_index = fmod(y_index,repeat);
         z = fmod(z,repeat);
     }
 
-    int xi = (int)x & 255;								// Calculate the "unit cube" that the point asked will be located in
-    int yi = (int)y & 255;								// The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
+    int xi = (int)x_index & 255;								// Calculate the "unit cube" that the point asked will be located in
+    int yi = (int)y_index & 255;								// The left bound is ( |_x_|,|_y_|,|_z_| ) and the right bound is that
     int zi = (int)z & 255;								// plus 1.  Next we calculate the location (from 0.0 to 1.0) in that cube.
-    double xf = x-(int)x;								// We also fade the location to smooth the result.
-    double yf = y-(int)y;
+    double xf = x_index-(int)x_index;								// We also fade the location to smooth the result.
+    double yf = y_index-(int)y_index;
     double zf = z-(int)z;
     double u = fade(xf);
     double v = fade(yf);
@@ -102,26 +101,25 @@ double perlin(double x, double y, double z) {
     return (lerp (y1, y2, w)+1)/2;						// For convenience we bound it to 0 - 1 (theoretical min/max before is -1 - 1)
 }
 
-double OctavePerlin(double x, double y, double z, int octaves, double persistence) {
+double OctavePerlin(double x_index, double y_index, double z, int octaves, double persistence) {
     double total = 0;
     double frequency = 1;
     double amplitude = 1;
     double maxValue = 0;			// Used for normalizing result to 0.0 - 1.0
     for(int i=0;i<octaves;i++) {
-        total += perlin(x * frequency, y * frequency, z * frequency) * amplitude;
+        total += perlin(x_index * frequency, y_index * frequency, z * frequency) * amplitude;
+        
         maxValue += amplitude;
-        amplitude = amplitude*0.4;//6persistence;
-        frequency = frequency*1.9;
+        
+        amplitude *= persistence;
+        frequency *= 2;
     }
     
     return total/maxValue;
 }
 
-int generate_terrain (int size, float x_layer, float y_layer, float z_layer, float ***z, float *light_dir) {
-    // Scaling Factors 
-    float scaling[] = {1};
-    int octaves = 10;
-    float zoom = 5; //Zoom scale, Bigger Zooms in, Smaller Zooms
+int generate_terrain (int point_amount, double x_start, double y_start, double z_layer, float region_size, float ***z, float *light_dir) {
+    int octaves = 2;
         
     // A thing that does c things that it needs
     for (int i = 0; i < 256; i++) {
@@ -129,14 +127,13 @@ int generate_terrain (int size, float x_layer, float y_layer, float z_layer, flo
     }
 
     // Fill array
-    for(int x = x_layer; x < x_layer + size; x++) {
-        double x_noise = x/(double)size*4;
-        for(int y = y_layer; y < y_layer + size; y++) {
-            double y_noise = y/(double)size*4;
-            
+    for(int x_index = 0; x_index < point_amount; x_index++) {
+        double x_noise = x_start + region_size/point_amount * x_index;
+        for(int y_index = 0; y_index < point_amount; y_index++) {
+            double y_noise = y_start + region_size/point_amount * y_index;
+
             //Adding Altitudes for different frequencies 
-            double height = OctavePerlin(x_noise, y_noise, z_layer, octaves, 1.0);   
-            z[x][y][0] = height;
+            z[x_index][y_index][0] = OctavePerlin(x_noise, y_noise, z_layer, octaves, 1.0);   
 
             ///
             /// Normal Shadowing 
@@ -145,23 +142,23 @@ int generate_terrain (int size, float x_layer, float y_layer, float z_layer, flo
             //Defining The 3 points in space 
             double P1_x = x_noise;
             double P1_y = y_noise;
-            double P1_z = z[x][y][0];
+            double P1_z = z[x_index][y_index][0];
 
-            double P2_x = (x - 1)/(double)size*4;
+            double P2_x = (x_index - 1)/(double)point_amount*4;
             double P2_y = y_noise;
             double P2_z;
 
             double P3_x = x_noise;
-            double P3_y = (y - 1)/(double)size*4;
+            double P3_y = (y_index - 1)/(double)point_amount*4;
             double P3_z;
 
-            if (x == 0){
-                P2_z = OctavePerlin((x - 1)/(double)size*4, (y)/(double)size*4, z_layer, octaves, 1.0);
-            } else if (y == 0) {    
-                P3_z = OctavePerlin((x)/(double)size*4, (y - 1)/(double)size*4, z_layer, octaves, 1.0);
+            if (x_index == 0){
+                P2_z = OctavePerlin((x_index - 1)/(double)point_amount*4, (y_index)/(double)point_amount*4, z_layer, octaves, 1.0);
+            } else if (y_index == 0) {    
+                P3_z = OctavePerlin((x_index)/(double)point_amount*4, (y_index - 1)/(double)point_amount*4, z_layer, octaves, 1.0);
             } else {
-                P2_z = z[x - 1][y][0];
-                P3_z = z[x][y -1][0];
+                P2_z = z[x_index - 1][y_index][0];
+                P3_z = z[x_index][y_index -1][0];
             }
             
             //Creating the 2 vectors from the 3 points 
@@ -196,8 +193,9 @@ int generate_terrain (int size, float x_layer, float y_layer, float z_layer, flo
 
             double alpha = alpha_min + ((alpha_min - alpha_max)*(theta-angle_min))/(angle_min - angle_max); //((alpha_max-alpha_min)/(angle_max-angle_min))*theta + alpha_min - ((alpha_max-alpha_min)/(angle_max-angle_min))*angle_min; 
             
-            z[x][y][1] = alpha;
+            z[x_index][y_index][1] = alpha;
         }
     }
     return 0;
 } 
+
