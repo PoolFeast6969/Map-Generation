@@ -77,7 +77,6 @@ int main() {
     for (int i=0; i<terrain_size; i++) {
         height[i] = malloc(sizeof(float)*terrain_size);
     }
-    generate_terrain(terrain_size, terrain_size, terrain_size, 3.0, 1, height); // Get a terrain height map
 
     //
     // Background
@@ -115,14 +114,6 @@ int main() {
         .end_height = 1, // Maximum value
     };
 
-    // Reusable pixel array for raw values
-    pixel* pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
-
-    // Add each terrain layer into the pixel array to make land
-    for(int layer=0; layer < sizeof(biome) / sizeof(struct terrain_layer); layer++) {
-        get_terrain_pixels(pixels, terrain_size, biome[layer], height, pixel_format);
-    }
-
     struct background_layer {
         double distance; // Distance from view
         double z_layer;
@@ -137,6 +128,16 @@ int main() {
         .distance = 5,
         .texture = SDL_CreateTexture(renderer,pixel_format_id,SDL_TEXTUREACCESS_TARGET,terrain_size,terrain_size),
     };
+
+    generate_terrain(terrain_size, terrain_size, terrain_size, 3.0, land.distance, height); // Get a terrain height map
+
+    // Reusable pixel array for raw values
+    pixel* pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
+
+    // Add each terrain layer into the pixel array to make land
+    for(int layer=0; layer < sizeof(biome) / sizeof(struct terrain_layer); layer++) {
+        get_terrain_pixels(pixels, terrain_size, biome[layer], height, pixel_format);
+    }
 
     // Actually put the pixel data into the texture, feels weird to do this after its in the struct
     SDL_UpdateTexture(land.texture, NULL, pixels, terrain_size * sizeof(pixel));
@@ -169,24 +170,25 @@ int main() {
         // Ensure blend thingo is on
         SDL_SetTextureBlendMode(background_layers[i].texture, SDL_BLENDMODE_BLEND); 
 
-        // Get shadows for every layer above this one
-        for (int j = i + 1; j < background_layer_amount; j++) {
+        // Get shadows for every layer above this one, this one being index i
+        // Iterating through all the indexs higher than this one, from closest to furthest
+        for (int caster_index = i + 1; caster_index < background_layer_amount; caster_index++) {
             // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
             for(int p=0;p<terrain_size*terrain_size;p++) pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
             // Run terrain generation
-            generate_terrain(terrain_size, terrain_size, terrain_size, background_layers[j].z_layer, background_layers[i].distance + background_layers[i].distance - background_layers[j].distance, height);
+            generate_terrain(terrain_size, terrain_size, terrain_size, background_layers[caster_index].z_layer, background_layers[i].distance, height);
             // Create a cloud pixel map from a height map
             get_terrain_pixels(pixels, terrain_size, cloud_shadows ,height, pixel_format);
             // send to gpu
-            background_layers[i].shadow_textures[j-i-1] = SDL_CreateTexture(renderer, pixel_format_id, SDL_TEXTUREACCESS_STATIC,terrain_size,terrain_size);
+            background_layers[i].shadow_textures[caster_index-i-1] = SDL_CreateTexture(renderer, pixel_format_id, SDL_TEXTUREACCESS_STATIC,terrain_size,terrain_size);
             // Draw pixels into texture (slow?)
-            SDL_UpdateTexture(background_layers[i].shadow_textures[j-i-1],NULL, pixels, terrain_size * sizeof(pixel));
+            SDL_UpdateTexture(background_layers[i].shadow_textures[caster_index-i-1],NULL, pixels, terrain_size * sizeof(pixel));
             // Combine shadow and clouds for each layer using the renderer
             // Using a custom blend thing to remove shadows where there is no surface for them to fall on
             SDL_BlendMode blend_mode = SDL_ComposeCustomBlendMode(SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD, SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
-            SDL_SetTextureBlendMode(background_layers[i].shadow_textures[j-i-1], blend_mode);
-            // Add clouds to texture using above blend mode
-            SDL_RenderCopy(renderer, background_layers[i].shadow_textures[j-i-1], NULL, NULL);
+            SDL_SetTextureBlendMode(background_layers[i].shadow_textures[caster_index-i-1], blend_mode);
+            // Add to texture using above blend mode
+            SDL_RenderCopy(renderer, background_layers[i].shadow_textures[caster_index-i-1], NULL, NULL);
         }
     }
     // Set target back to the screen
@@ -256,7 +258,7 @@ int main() {
     // Loop
     //
 
-    double view_velocity[] = {0,0};
+    double view_velocity[] = {-0.05,-0.06};
     SDL_Event window_event;
 
     bool run = true;
