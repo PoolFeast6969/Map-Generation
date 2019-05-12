@@ -260,6 +260,7 @@ int main() {
 
     double view_velocity[] = {-0.05,-0.06};
     SDL_Event window_event;
+    int window_w, window_h;
 
     bool run = true;
     int velocity = 1;
@@ -330,7 +331,7 @@ int main() {
                 background_layers[i].last_update_time[a] = SDL_GetTicks();
             }
 
-            //SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
+            SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
             SDL_Rect new_position = {background_layers[i].position[0], background_layers[i].position[1], terrain_size*pixel_scaling, terrain_size*pixel_scaling};
             // Add to frame
             SDL_RenderCopy(renderer,background_layers[i].texture,NULL,&new_position);
