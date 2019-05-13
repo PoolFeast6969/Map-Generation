@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-int shift_rows(int* map, int rows, int columns, int shift_amount) {
+void shift_rows(int* map, int rows, int columns, int shift_amount) {
     int element_size = sizeof(int);
 
     // When you add to a pointer its mulitplied by the size of the pointers type
@@ -22,7 +22,7 @@ int shift_rows(int* map, int rows, int columns, int shift_amount) {
     memset((shift_amount < 0 ? map+rows*columns+shift_amount*columns : map), 0, element_size * columns * abs(shift_amount));
 };
 
-int shift_columns(int* map, int rows, int columns, int shift_amount) {
+void shift_columns(int* map, int rows, int columns, int shift_amount) {
     int element_size = sizeof(int);
 
     for (size_t i = 0; i < rows; i++) {   
