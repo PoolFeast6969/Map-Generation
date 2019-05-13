@@ -118,7 +118,7 @@ double OctavePerlin(double x_index, double y_index, double z, int octaves, doubl
     return total/maxValue;
 }
 
-int generate_terrain (int output_resolution, double x_midpoint, double y_midpoint, double z_layer, double region_size, float **z) {
+int generate_terrain (int x_resolution, int y_resolution, double x_start, double y_start, double x_size, double y_size, double z_layer, float **z) {
     int octaves = 2;
 
     // A thing that does c things that it needs
@@ -127,10 +127,10 @@ int generate_terrain (int output_resolution, double x_midpoint, double y_midpoin
     }
 
     // Fill array
-    for(int x_index = 0; x_index < output_resolution; x_index++) {
-        double x_noise = x_midpoint + region_size/output_resolution * x_index - region_size/2;
-        for(int y_index = 0; y_index < output_resolution; y_index++) {
-            double y_noise = y_midpoint + region_size/output_resolution * y_index - region_size/2;
+    for(int x_index = 0; x_index < x_resolution; x_index++) {
+        double x_noise = x_start + x_size/x_resolution * x_index;
+        for(int y_index = 0; y_index < y_resolution; y_index++) {
+            double y_noise = y_start + y_size/y_resolution * y_index;
             //Adding Altitudes for different frequencies 
             z[x_index][y_index] = OctavePerlin(x_noise, y_noise, z_layer, octaves,1.0);   
             //printf("%i \n",y_index);

@@ -6,7 +6,7 @@
 #include "SDL2/SDL.h"
 
 // The compiler needs to know that this function exists before it calls it, or something like that
-int generate_terrain (int , double , double , double , double, float **);
+int generate_terrain (int x_resolution, int y_resolution, double x_start, double y_start, double x_size, double y_size, double z_layer, float **z);
 
 struct terrain_layer {
     int start_color[4];
@@ -17,17 +17,17 @@ struct terrain_layer {
 
 typedef Uint32 pixel;
 
-int get_terrain_pixels(pixel *pixels, int pixel_amount, struct terrain_layer layer, float **height, SDL_PixelFormat *pixel_format) {
+int get_terrain_pixels(int x_resolution, int y_resolution, pixel *pixels, struct terrain_layer layer, float **height, SDL_PixelFormat *pixel_format) {
     // Convert height map to pixel color map
-    for(int x=0; x < pixel_amount; x++) {
-        for(int y=0; y < pixel_amount; y++) {
+    for(int x=0; x < x_resolution; x++) {
+        for(int y=0; y < y_resolution; y++) {
                 if (layer.start_height <= height[x][y] && layer.end_height >= height[x][y]) { // the layer of interest
                     float pixel_color[4]; 
                     for(int color=0; color <= 3; color++) {
                         // linearly interpolate between the two end colors // TODO add something so beaches aren't so discontinious
                         pixel_color[color] = layer.start_color[color] + ((layer.start_color[color] - layer.end_color[color])*(height[x][y]-layer.start_height))/(layer.start_height - layer.end_height);
                     }
-                    pixels[x*pixel_amount + y] = SDL_MapRGBA(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2],pixel_color[3]);
+                    pixels[x*x_resolution + y] = SDL_MapRGBA(pixel_format,pixel_color[0],pixel_color[1],pixel_color[2],pixel_color[3]);
             }
         }
     }
@@ -41,6 +41,42 @@ int set_shadow(SDL_Texture* shadow_texture, float lightness) {
     return 0;
 }
 
+int get_terrain_texture(int size_x, int size_y, double location_x, double location_y, double x_location_size, double y_location_size, double z_layer, struct terrain_layer biome*, SDL_Texture* texture) {
+    // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
+    for(int p=0;p<size_x*size_y;p++) pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
+    
+    // Calculate the perlin map position to render (top left of tile)
+    // Then run terrain generation
+    generate_terrain(
+        size_x, 
+        size_y, 
+        location_x,
+        location_y,
+        x_location_size,
+        y_location_size,
+        z_layer, 
+        height
+    );
+
+    // Create a colored pixel map from a height map
+    for (int layer = 0; layer < biome/sizeof(struct terrain_layer); layer++) {
+        // render each biome layer on top of each other
+        get_terrain_pixels(
+            size_x, 
+            size_y,                        
+            pixels, 
+            biome[layer],
+            height, 
+            pixel_format
+        );
+    }
+
+    // Draw pixels into texture (slow?)
+    SDL_UpdateTexture(texture,NULL, pixels, size_x * sizeof(pixel));
+
+    return 0;
+}
+
 int main() {
     //
     // Init
@@ -48,8 +84,18 @@ int main() {
 
     printf("Starting\n");
 
+    int window_w = 1000;
+    int window_h = 1000;
+
+    // yep all these pixels are the same size
+    double pixel_scaling = 5;
+
+    // Effects all background layers
+    const int tile_array_height = 3;
+    const int tile_array_width = 4;
+
     SDL_Init( SDL_INIT_VIDEO );
-    SDL_Window *window = SDL_CreateWindow("planes but with less detail",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,1000,1000,SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+    SDL_Window *window = SDL_CreateWindow("planes but with less detail",SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,window_h,window_w,SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     SDL_Renderer *renderer = SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
@@ -58,29 +104,27 @@ int main() {
     Uint32 pixel_format_id = SDL_PIXELFORMAT_RGBA32;
     //Uint32 pixel_format_id = SDL_PIXELFORMAT_RGB332; // should be able to do whatever you want here, just remember to change typedef pixel
     SDL_PixelFormat *pixel_format = SDL_AllocFormat(pixel_format_id); // Get the actual format object from its ID
-    
-    //
-    // Terrain Heights Array
-    //
-
-    // yep all these pixels are the same size
-    double pixel_scaling = 5;
-
-    // based off window size
-    int terrain_size = 1000/pixel_scaling;
-
-    // Make array for the terrain generator to fill (a texture i guess)
-    // Allocating memory for the matrix which will store the altitudes
-    // Allocate the first dimension as an array of float pointers
-    float **height = malloc(sizeof(float*)*terrain_size);
-    // Allocate each float pointer as an array of actual floats
-    for (int i=0; i<terrain_size; i++) {
-        height[i] = malloc(sizeof(float)*terrain_size);
-    }
 
     //
     // Background
     //
+
+    int tile_size[2];
+    // Calculate the size of a tile
+    int tile_size[0] = window_h/tile_array_height;
+    int tile_size[1] = window_w/tile_array_width;
+
+    // Make array for the terrain generator to fill (a texture i guess)
+    // Allocating memory for the matrix which will store the altitudes
+    // Allocate the first dimension as an array of float pointers
+    float **height = malloc(sizeof(float*)*tile_size[0]);
+    // Allocate each float pointer as an array of actual floats
+    for (int i=0; i<tile_size[0]; i++) {
+        height[i] = malloc(sizeof(float)*tile_size[1]);
+    }
+
+    // Reusable pixel array for raw values
+    pixel* pixels = malloc(sizeof(pixel)*tile_size[0]*tile_size[1]);
 
     struct terrain_layer biome[] = {
         {
@@ -101,12 +145,12 @@ int main() {
         }
     };
 
-    struct terrain_layer clouds = {
+    struct terrain_layer clouds[] = {{
         .start_color = {180,218,255,255}, // Deep water
         .end_color = {255,255,255,255}, // Shallow water
         .start_height = 0.6, // Minimum value
         .end_height = 1, // Maximum value
-    };
+    }};
 
     struct terrain_layer cloud_shadows = {
         .start_color = {0,0,0,100}, // Deep water
@@ -133,19 +177,25 @@ int main() {
     };
 
     // Creates an array of cloud layers with their height and density already set, and the land already in the background
-    struct background_layer background_layers[] = {land,{4.9,2},{2,5}};
+    struct background_layer background_layers[] = {
+        land,
+        {
+            4.9,
+            2,
+            .biome=clouds
+        },{
+            2,
+            5,
+            .biome=clouds
+        }
+    };
             
     int background_layer_amount = sizeof(background_layers) / sizeof(struct background_layer);
     printf("There are %i background layer(s)\n",background_layer_amount);
 
-    // Effects all background layers
-    const int tile_array_height = 3;
-    const int tile_array_width = 4;
-    int tile_size[2];
-
     for (int i = 0; i < background_layer_amount; i++) {
         // initialise the tile arrays
-        SDL_Texture** tile_array[tile_array_height][tile_array_width] = {0};
+        SDL_Texture** tile_array[tile_array_height][tile_array_width] = {0}; // Set everything to 0?
         background_layers[i].tile_array = tile_array;
     }
 
@@ -216,7 +266,6 @@ int main() {
 
     double view_velocity[] = {-0.05,-0.06};
     SDL_Event window_event;
-    int window_w, window_h;
 
     bool run = true;
     int velocity = 1;
@@ -289,90 +338,82 @@ int main() {
 
                 // Move the tile if the position has shifted enough
                 double change = background_layers[i].position[a] - background_layers[i].tile_array_position[a];
-                if (change > tile_size[a]) {
+                if (abs(change) > tile_size[a]) {
                     // shift the array in the correct direction
 
+                    background_layers[i].tile_array_position[a] = background_layers[i].position[a];
                 }
             }
-
-            // Update current window dimensions
-            SDL_GetRendererOutputSize(renderer, &window_w, &window_h);
-
-            // Calculate the size of a tile
-            int tile_size[0] = window_h/tile_array_height;
-            int tile_size[1] = window_w/tile_array_width;
-
-            
 
             // Go through the tile array for this layer
             for (int row = 0; row < tile_array_height; row++) {
                 for (int column = 0; column < tile_array_width; column++) {
                     if (background_layers[i].tile_array[row][column] == NULL) {
                         // Generate a new texture for this tile
-                    } 
-                    // Draw the tile on the screen
+                        SDL_Texture* layer_texture = SDL_CreateTexture(renderer,pixel_format_id,SDL_TEXTUREACCESS_TARGET,tile_size[0],tile_size[1]);
+                        get_terrain_texture(
+                            tile_size[0], 
+                            tile_size[1],
+                            background_layers[i].tile_array_position[0] + tile_size[0]*column,
+                            background_layers[i].tile_array_position[1] + tile_size[1]*row,
+                            background_layers[i].distance, // These wont work
+                            background_layers[i].distance,
+                            background_layers[i].z_layer,
+                            background_layers[i].biome,
+                            layer_texture
+                        )
 
+                        //
+                        // Shadows
+                        //
 
-                    if (i > 0) { // don't touch the land
-                        // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
-                        for(int p=0;p<terrain_size*terrain_size;p++) pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
-                        // Run terrain generation
-                        generate_terrain(terrain_size, terrain_size, terrain_size, background_layers[i].z_layer, background_layers[i].distance, height);
-                        // Create a cloud pixel map from a height map
-                        get_terrain_pixels(pixels, terrain_size, clouds ,height, pixel_format);
-                        // send to gpu
-                        background_layers[i].texture = SDL_CreateTexture(renderer,pixel_format_id,SDL_TEXTUREACCESS_TARGET,terrain_size,terrain_size);
-                        // Draw pixels into texture (slow?)
-                        SDL_UpdateTexture(background_layers[i].texture,NULL,pixels, terrain_size * sizeof(pixel));
-                    } else {
-                        // For land
-                        generate_terrain(terrain_size, terrain_size, terrain_size, 3.0, land.distance, height); // Get a terrain height map
+                        // now we know how big this array is, so preallocate it
+                        SDL_Texture* shadow_textures[background_layer_amount - i - 1];
+                        // Allow shadows to be rendered into existing texture, remembering to turn off later          
+                        SDL_SetRenderTarget(renderer, layer_texture);
+                        // Ensure blend thingo is on
+                        SDL_SetTextureBlendMode(layer_texture, SDL_BLENDMODE_BLEND); 
 
-                        // Reusable pixel array for raw values
-                        pixel* pixels = malloc(sizeof(pixel)*terrain_size*terrain_size);
-
-                        // Add each terrain layer into the pixel array to make land
-                        for(int layer=0; layer < sizeof(biome) / sizeof(struct terrain_layer); layer++) {
-                            get_terrain_pixels(pixels, terrain_size, biome[layer], height, pixel_format);
+                        // Get shadows for every layer above this one, this one being index i
+                        // Iterating through all the indexs higher than this one, from closest to furthest
+                        for (int caster_index = i + 1; caster_index < background_layer_amount; caster_index++) {
+                            shadow_textures[caster_index-i-1] = SDL_CreateTexture(renderer, pixel_format_id, SDL_TEXTUREACCESS_STATIC,tile_size[0],tile_size[1]);
+                            get_terrain_texture(
+                                tile_size[0], 
+                                tile_size[1],
+                                background_layers[i].tile_array_position[0] + tile_size[0]*column,
+                                background_layers[i].tile_array_position[1] + tile_size[1]*row,
+                                background_layers[i].distance, // These wont work
+                                background_layers[i].distance,
+                                background_layers[caster_index].z_layer,
+                                {cloud_shadows},
+                                shadow_textures[caster_index-i-1]
+                            )
+                            
+                            // Combine shadow and clouds for each layer using the renderer
+                            // Using a custom blend thing to remove shadows where there is no surface for them to fall on
+                            SDL_BlendMode blend_mode = SDL_ComposeCustomBlendMode(SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD, SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
+                            SDL_SetTextureBlendMode(shadow_textures[caster_index-i-1], blend_mode);
+                            // Add to texture using above blend mode
+                            SDL_RenderCopy(renderer, shadow_textures[caster_index-i-1], NULL, NULL);
                         }
+                        // Set target back to the screen
+                        SDL_SetRenderTarget(renderer, NULL);
 
-                        // Actually put the pixel data into the texture, feels weird to do this after its in the struct
-                        SDL_UpdateTexture(land.texture, NULL, pixels, terrain_size * sizeof(pixel));
+
+                        // Add texture pointer to tile array
+                        background_layers[i].tile_array[row][column] = layer_texture;
+
                     }
-                    // now we know how big this array is, so preallocate it
-                    SDL_Texture* shadow_textures[background_layer_amount - i - 1];
-                    // Allow shadows to be rendered into existing texture, remembering to turn off later          
-                    SDL_SetRenderTarget(renderer, background_layers[i].texture);
-                    // Ensure blend thingo is on
-                    SDL_SetTextureBlendMode(background_layers[i].texture, SDL_BLENDMODE_BLEND); 
-
-                    // Get shadows for every layer above this one, this one being index i
-                    // Iterating through all the indexs higher than this one, from closest to furthest
-                    for (int caster_index = i + 1; caster_index < background_layer_amount; caster_index++) {
-                        // Set pixels transparent, could be done faster, but what if transparent isn't all zeros?
-                        for(int p=0;p<terrain_size*terrain_size;p++) pixels[p] = SDL_MapRGBA(pixel_format,0,0,0,0);
-                        // Run terrain generation
-                        generate_terrain(terrain_size, terrain_size, terrain_size, background_layers[caster_index].z_layer, background_layers[i].distance, height);
-                        // Create a cloud pixel map from a height map
-                        get_terrain_pixels(pixels, terrain_size, cloud_shadows ,height, pixel_format);
-                        // send to gpu
-                        shadow_textures[caster_index-i-1] = SDL_CreateTexture(renderer, pixel_format_id, SDL_TEXTUREACCESS_STATIC,terrain_size,terrain_size);
-                        // Draw pixels into texture (slow?)
-                        SDL_UpdateTexture(shadow_textures[caster_index-i-1],NULL, pixels, terrain_size * sizeof(pixel));
-                        // Combine shadow and clouds for each layer using the renderer
-                        // Using a custom blend thing to remove shadows where there is no surface for them to fall on
-                        SDL_BlendMode blend_mode = SDL_ComposeCustomBlendMode(SDL_BLENDFACTOR_SRC_ALPHA, SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, SDL_BLENDOPERATION_ADD, SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD);
-                        SDL_SetTextureBlendMode(shadow_textures[caster_index-i-1], blend_mode);
-                        // Add to texture using above blend mode
-                        SDL_RenderCopy(renderer, shadow_textures[caster_index-i-1], NULL, NULL);
-                    }
-                    // Set target back to the screen
-                    SDL_SetRenderTarget(renderer, NULL);
-
-
-                    SDL_Rect new_position = {background_layers[i].position[0], background_layers[i].position[1], terrain_size*pixel_scaling, terrain_size*pixel_scaling};
+                    // Draw the tile on the screen
+                    SDL_Rect new_position = {
+                        background_layers[i].tile_array_position[0] + tile_size[0]*column,
+                        background_layers[i].tile_array_position[1] + tile_size[1]*row, 
+                        background_layers[i].tile_array_position[0] + tile_size[0]*(column+1), 
+                        background_layers[i].tile_array_position[1] + tile_size[1]*(row+1), 
+                    };
                     // Add to frame
-                    SDL_RenderCopy(renderer,background_layers[i].texture,NULL,&new_position);
+                    SDL_RenderCopy(renderer,background_layers[i].tile_array[row][column],NULL,&new_position);
                 }
             }
         }
